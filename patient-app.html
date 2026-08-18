@@ -66,12 +66,12 @@ try{
 /* =========================================================
    2) LOCAL UI STATE (screen navigation only — NOT app data)
    ========================================================= */
-const DOCTOR_ID = "d1"; // single demo doctor for MVP
+let selectedDoctorId = null; // set when the patient picks a doctor from the list
 let S = {
   screen:"splash", lang:"en",
   demoUserId: localStorage.getItem("clinicq_demo_uid") || null, // stand-in for real Auth UID until phone auth is wired (needs hosted domain)
   patients:[], selectedPatientId:null,
-  doctor:null, queueLive:null,
+  doctor:null, doctorsList:[], queueLive:null,
   appointment:null,
   unsubQueue:null, unsubAppointment:null
 };
@@ -88,16 +88,23 @@ function waitMinutes(token){ if(!S.queueLive) return null; return Math.max(0,(to
 
 // Load doctor doc once (fee/hours/etc rarely change)
 async function loadDoctor(){
-  if(!fb.ready) return;
-  const doc = await fb.db.collection("doctors").doc(DOCTOR_ID).get();
+  if(!fb.ready || !selectedDoctorId) return;
+  const doc = await fb.db.collection("doctors").doc(selectedDoctorId).get();
   S.doctor = doc.exists ? doc.data() : null;
+}
+
+// Fetch the list of doctors patients can choose from
+async function loadDoctorsList(){
+  if(!fb.ready) return;
+  const snap = await fb.db.collection("doctors").where("isActive","==",true).get();
+  S.doctorsList = snap.docs.map(d=>({id:d.id, ...d.data()}));
 }
 
 // LIVE listener on queue/{doctorId} — this is what makes token tracking real-time
 function listenQueue(){
-  if(!fb.ready) return;
+  if(!fb.ready || !selectedDoctorId) return;
   if(S.unsubQueue) S.unsubQueue();
-  S.unsubQueue = fb.db.collection("queue").doc(DOCTOR_ID).onSnapshot(doc=>{
+  S.unsubQueue = fb.db.collection("queue").doc(selectedDoctorId).onSnapshot(doc=>{
     S.queueLive = doc.exists ? doc.data() : {currentToken:0,status:"OPEN"};
     if(S.screen==="token" || S.screen==="home") render();
   });
@@ -115,9 +122,17 @@ function listenAppointment(appointmentId){
 }
 
 // On app start, resume tracking a previously booked appointment if one exists
-function resumeSavedAppointment(){
+async function resumeSavedAppointment(){
   const savedId = localStorage.getItem("clinicq_last_appointment");
-  if(savedId && fb.ready) listenAppointment(savedId);
+  if(!savedId || !fb.ready) return;
+  const doc = await fb.db.collection("appointments").doc(savedId).get();
+  if(!doc.exists) return;
+  const data = doc.data();
+  if(["completed","cancelled","no_show"].includes(data.status)) return; // don't resume finished ones
+  selectedDoctorId = data.doctorId;
+  await loadDoctor();
+  listenQueue();
+  listenAppointment(savedId);
 }
 
 async function loadPatients(){
@@ -135,7 +150,7 @@ async function addPatientToFirestore(p){
 async function createAppointment({patient, paymentType, amountPaid}){
   const data = {
     userId:S.demoUserId, patientId:patient.id, patientName:patient.fullName, patientAge:patient.age,
-    complaint:patient.complaint||"", doctorId:DOCTOR_ID,
+    complaint:patient.complaint||"", doctorId:selectedDoctorId,
     paymentType, amountPaid, paymentStatus:"verified", paymentRef:"DEMO-"+Date.now(),
     tokenNumber:null, status:"waiting_for_token", source:"online",
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -151,15 +166,23 @@ async function createAppointment({patient, paymentType, amountPaid}){
 function header(title=""){return `<header><div class="logo">Clinic<span>Q</span></div><div class="small">${esc(title)}</div></header>`}
 function nav(active){return `<div class="nav">
 <button class="${active==='home'?'active':''}" onclick="goHome()">⌂<br>Home</button>
-<button class="${active==='doctors'?'active':''}" onclick="setScreen('doctor')">⌕<br>Find Doctor</button>
+<button class="${active==='doctors'?'active':''}" onclick="goDoctorsList()">⌕<br>Find Doctor</button>
 <button class="${active==='token'?'active':''}" onclick="setScreen('token')">#<br>My Token</button>
 <button class="${active==='profile'?'active':''}" onclick="setScreen('profile')">●<br>Profile</button></div>`}
 
 async function goHome(){
+  await resumeSavedAppointment();
+  setScreen("home");
+}
+async function goDoctorsList(){
+  await loadDoctorsList();
+  setScreen("doctorsList");
+}
+async function chooseDoctor(id){
+  selectedDoctorId = id;
   await loadDoctor();
   listenQueue();
-  resumeSavedAppointment();
-  setScreen("home");
+  setScreen("doctor");
 }
 
 function render(){
@@ -169,6 +192,7 @@ function render(){
   else if(S.screen==="selectPatient") html = selectPatientView();
   else if(S.screen==="addPatient") html = addPatientView();
   else if(S.screen==="home") html = homeView();
+  else if(S.screen==="doctorsList") html = doctorsListView();
   else if(S.screen==="doctor") html = doctorView();
   else if(S.screen==="book") html = bookView();
   else if(S.screen==="payment") html = paymentView();
@@ -219,7 +243,7 @@ async function submitAddPatient(){
 
 function homeView(){
   return `${header("Home")}<div class="screen">
-  ${S.appointment ? appointmentCard() : `<div class="card center"><p>No active appointment.</p><button class="primary" onclick="setScreen('doctor')">Find a Doctor</button></div>`}
+  ${S.appointment ? appointmentCard() : `<div class="card center"><p>No active appointment.</p><button class="primary" onclick="goDoctorsList()">Find a Doctor</button></div>`}
   </div>${nav('home')}`;
 }
 
@@ -232,6 +256,18 @@ function appointmentCard(){
   <div class="kpi"><span>Token</span><b>${ap.tokenNumber ?? "Waiting for assignment"}</b></div>
   <button class="secondary big" onclick="setScreen('token')">Track Live Queue</button>
   </div>`;
+}
+
+function doctorsListView(){
+  const q = (S.doctorSearch||"").toLowerCase();
+  const filtered = S.doctorsList.filter(d=>!q || (d.name||"").toLowerCase().includes(q) || (d.specialty||"").toLowerCase().includes(q));
+  return `${header("Find Doctor")}<div class="screen">
+  <input placeholder="Search by doctor name or specialty" value="${esc(S.doctorSearch||"")}" oninput="S.doctorSearch=this.value;render()" style="margin-bottom:14px">
+  ${filtered.map(d=>`<div class="card doctor" style="cursor:pointer" onclick="chooseDoctor('${d.id}')">
+  <div class="avatar">👨‍⚕️</div>
+  <div><h3>${esc(d.name)}</h3><p>${esc(d.specialty)}</p>
+  <p class="small">${esc(d.clinicName)} • Total ₹${(d.consultationFee+d.platformFee)}</p></div></div>`).join("") || `<p>No doctors match your search.</p>`}
+  </div>${nav('doctors')}`;
 }
 
 function doctorView(){
@@ -254,7 +290,7 @@ function doctorView(){
   </div>${nav('doctors')}`;
 }
 function hasActiveAppointment(){
-  return S.appointment && S.appointment.doctorId===DOCTOR_ID && !["completed","cancelled","no_show"].includes(S.appointment.status);
+  return S.appointment && S.appointment.doctorId===selectedDoctorId && !["completed","cancelled","no_show"].includes(S.appointment.status);
 }
 function tryBookAppointment(){
   if(hasActiveAppointment()){

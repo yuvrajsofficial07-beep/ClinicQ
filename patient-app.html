@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ClinicQ — Patient App</title>
+<style>
+:root{--blue:#1769ff;--dark:#17324d;--muted:#64788a;--bg:#f4f8fc;--line:#e2eaf2;--green:#18864b;--orange:#9a6500;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--dark)}
+button,input,select,textarea{font:inherit}button{border:0;border-radius:12px;padding:13px 16px;font-weight:750;cursor:pointer}
+.primary{background:var(--blue);color:#fff}.secondary{background:#e9f1ff;color:#1258c4}.outline{background:#fff;border:1px solid var(--line);color:var(--dark)}.danger{background:#ffe9e7;color:var(--red)}
+.app{max-width:620px;margin:auto;min-height:100vh;background:#fff;box-shadow:0 0 35px #17324d12}
+header{height:68px;padding:0 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:10}
+.logo{font-size:24px;font-weight:900}.logo span{color:var(--blue)}.screen{padding:22px 20px 105px}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 5px 18px #17324d0a}
+h1{font-size:28px;line-height:1.15;margin:7px 0 10px}h2{font-size:20px;margin:5px 0 12px}h3{font-size:16px;margin:0 0 8px}p{color:var(--muted);line-height:1.5;margin:7px 0}.small{font-size:12px;color:var(--muted)}.center{text-align:center}
+label{display:block;font-size:13px;font-weight:750;margin:13px 0 6px}input,select,textarea{width:100%;border:1px solid #ccd9e5;border-radius:12px;padding:13px;background:#fff;outline:none}textarea{min-height:85px}
+.row{display:flex;gap:10px}.row>*{flex:1}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tag{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:750;background:#eaf7ef;color:var(--green)}.warning{background:#fff4d5;color:var(--orange)}.dangerTag{background:#ffe9e7;color:var(--red)}
+.kpi{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #eef2f5}.kpi:last-child{border-bottom:0}.kpi b{font-size:18px}
+.token{font-size:72px;line-height:1;font-weight:950;color:var(--blue);text-align:center;margin:8px 0}.tokenLabel{text-align:center;color:var(--muted);font-size:13px}
+.avatar{width:56px;height:56px;border-radius:50%;background:#eaf1ff;color:var(--blue);display:grid;place-items:center;font-size:22px;font-weight:900;flex:none}.doctor{display:flex;gap:14px;align-items:flex-start}
+.big{width:100%;margin-top:10px}.muted{background:#f7fafc}.success{padding:13px;border-radius:12px;background:#e9f8ef;color:#176b38}.alert{padding:13px;border-radius:12px;background:#fff4d5;color:#765600}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:620px;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;z-index:20;padding:7px 4px}.nav button{background:none;color:#62788a;padding:8px 5px;font-size:11px}.nav button.active{color:var(--blue)}
+.splash{min-height:100vh;display:grid;place-items:center;text-align:center;padding:30px}.splash .logo{font-size:42px}.splash p{max-width:400px;margin:10px auto}
+.hidden{display:none!important}.back{background:none;padding:0;color:var(--blue);font-weight:750;margin-bottom:14px}
+.connbar{position:fixed;top:0;left:0;right:0;background:#b42318;color:#fff;text-align:center;font-size:12px;padding:6px;z-index:999}
+@media(min-width:700px){.app{min-height:100vh}.screen{padding-left:28px;padding-right:28px}}
+</style>
+</head>
+<body>
+<div id="connbar" class="connbar hidden">⚠ Firebase not configured yet — see FIREBASE_SETUP_NOTES.md</div>
+<div id="app"></div>
+
+<!-- Firebase SDK (compat build — works with plain <script> tags, no build step needed) -->
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+
+<script>
+/* =========================================================
+   1) PASTE YOUR FIREBASE CONFIG HERE (from Firebase console)
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyDsk5VfH0d2UWa_60E_UxQbCCRLDzFsiGA",
+  authDomain: "clinic-a4513.firebaseapp.com",
+  projectId: "clinic-a4513",
+  storageBucket: "clinic-a4513.firebasestorage.app",
+  messagingSenderId: "949075919558",
+  appId: "1:949075919558:web:aad21915e2cea6e5588dc7",
+  measurementId: "G-JZV455CNCV"
+};
+
+let fb = { ready:false };
+try{
+  if(firebaseConfig.apiKey!=="REPLACE_ME"){
+    firebase.initializeApp(firebaseConfig);
+    fb.db = firebase.firestore();
+    fb.auth = firebase.auth();
+    fb.ready = true;
+  } else {
+    document.getElementById("connbar").classList.remove("hidden");
+  }
+}catch(e){ console.error("Firebase init failed:", e); document.getElementById("connbar").classList.remove("hidden"); }
+
+/* =========================================================
+   2) LOCAL UI STATE (screen navigation only — NOT app data)
+   ========================================================= */
+const DOCTOR_ID = "d1"; // single demo doctor for MVP
+let S = {
+  screen:"splash", lang:"en",
+  demoUserId: localStorage.getItem("clinicq_demo_uid") || null, // stand-in for real Auth UID until phone auth is wired (needs hosted domain)
+  patients:[], selectedPatientId:null,
+  doctor:null, queueLive:null,
+  appointment:null,
+  unsubQueue:null, unsubAppointment:null
+};
+if(!S.demoUserId){ S.demoUserId = "demo_"+Math.random().toString(36).slice(2,10); localStorage.setItem("clinicq_demo_uid", S.demoUserId); }
+
+function esc(x){return String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+function setScreen(x){ S.screen=x; render(); }
+function selectedPatient(){ return S.patients.find(p=>p.id===S.selectedPatientId) || null; }
+function waitMinutes(token){ if(!S.queueLive) return null; return Math.max(0,(token-S.queueLive.currentToken))*(S.doctor?.avgConsultationMinutes||5); }
+
+/* =========================================================
+   3) FIRESTORE DATA FUNCTIONS
+   ========================================================= */
+
+// Load doctor doc once (fee/hours/etc rarely change)
+async function loadDoctor(){
+  if(!fb.ready) return;
+  const doc = await fb.db.collection("doctors").doc(DOCTOR_ID).get();
+  S.doctor = doc.exists ? doc.data() : null;
+}
+
+// LIVE listener on queue/{doctorId} — this is what makes token tracking real-time
+function listenQueue(){
+  if(!fb.ready) return;
+  if(S.unsubQueue) S.unsubQueue();
+  S.unsubQueue = fb.db.collection("queue").doc(DOCTOR_ID).onSnapshot(doc=>{
+    S.queueLive = doc.exists ? doc.data() : {currentToken:0,status:"OPEN"};
+    if(S.screen==="token" || S.screen==="home") render();
+  });
+}
+
+// LIVE listener on this patient's active appointment (so tokenNumber appears the moment operator assigns it)
+function listenAppointment(appointmentId){
+  if(!fb.ready) return;
+  if(S.unsubAppointment) S.unsubAppointment();
+  S.unsubAppointment = fb.db.collection("appointments").doc(appointmentId).onSnapshot(doc=>{
+    S.appointment = doc.exists ? {id:doc.id, ...doc.data()} : null;
+    render();
+  });
+}
+
+async function loadPatients(){
+  if(!fb.ready){ S.patients=[]; return; }
+  const snap = await fb.db.collection("users").doc(S.demoUserId).collection("patients").get();
+  S.patients = snap.docs.map(d=>({id:d.id, ...d.data()}));
+}
+
+async function addPatientToFirestore(p){
+  const ref = await fb.db.collection("users").doc(S.demoUserId).collection("patients").add(p);
+  return ref.id;
+}
+
+// Creates the appointment doc. tokenNumber is intentionally null — operator assigns it later.
+async function createAppointment({patient, paymentType, amountPaid}){
+  const data = {
+    userId:S.demoUserId, patientId:patient.id, patientName:patient.fullName, patientAge:patient.age,
+    complaint:patient.complaint||"", doctorId:DOCTOR_ID,
+    paymentType, amountPaid, paymentStatus:"verified", paymentRef:"DEMO-"+Date.now(),
+    tokenNumber:null, status:"waiting_for_token", source:"online",
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  const ref = await fb.db.collection("appointments").add(data);
+  return ref.id;
+}
+
+/* =========================================================
+   4) SCREENS
+   ========================================================= */
+function header(title=""){return `<header><div class="logo">Clinic<span>Q</span></div><div class="small">${esc(title)}</div></header>`}
+function nav(active){return `<div class="nav">
+<button class="${active==='home'?'active':''}" onclick="goHome()">⌂<br>Home</button>
+<button class="${active==='doctors'?'active':''}" onclick="setScreen('doctor')">⌕<br>Find Doctor</button>
+<button class="${active==='token'?'active':''}" onclick="setScreen('token')">#<br>My Token</button>
+<button class="${active==='profile'?'active':''}" onclick="setScreen('profile')">●<br>Profile</button></div>`}
+
+async function goHome(){
+  await loadDoctor();
+  listenQueue();
+  setScreen("home");
+}
+
+function render(){
+  const a = document.getElementById("app");
+  let html = "";
+  if(S.screen==="splash") html = splashView();
+  else if(S.screen==="selectPatient") html = selectPatientView();
+  else if(S.screen==="addPatient") html = addPatientView();
+  else if(S.screen==="home") html = homeView();
+  else if(S.screen==="doctor") html = doctorView();
+  else if(S.screen==="book") html = bookView();
+  else if(S.screen==="payment") html = paymentView();
+  else if(S.screen==="waiting") html = waitingView();
+  else if(S.screen==="token") html = tokenView();
+  else if(S.screen==="profile") html = profileView();
+  a.innerHTML = `<div class="app">${html}</div>`;
+}
+
+function splashView(){
+  return `<div class="splash"><div class="logo">Clinic<span>Q</span></div>
+  <p><b>अब इंतज़ार हुआ खत्म, सीधे घर से पहुँचें डॉक्टर के पास।</b><br>No More Waiting. Reach Your Doctor from Home at the Right Time.</p>
+  <button class="primary big" onclick="startApp()">Get Started</button></div>`;
+}
+async function startApp(){
+  await loadPatients();
+  setScreen(S.patients.length ? "selectPatient" : "addPatient");
+}
+
+function selectPatientView(){
+  return `<div class="screen"><h1>Who is the appointment for?</h1>
+  ${S.patients.map(p=>`<div class="card" onclick="choosePatient('${p.id}')" style="cursor:pointer"><b>${esc(p.relation)} – ${esc(p.fullName)}</b><p>Age ${p.age} • ${esc(p.gender)}</p></div>`).join("")}
+  <button class="secondary big" onclick="setScreen('addPatient')">+ Add New Patient</button></div>`;
+}
+function choosePatient(id){ S.selectedPatientId=id; goHome(); }
+
+function addPatientView(){
+  return `<div class="screen"><h1>Add Patient</h1>
+  <label>Relation</label><input id="rel" placeholder="Myself / Father / Mother">
+  <label>Full Name</label><input id="pf">
+  <label>Age</label><input id="pa" type="number">
+  <label>Gender</label><select id="pg"><option>Male</option><option>Female</option><option>Other</option></select>
+  <label>Mobile Number</label><input id="pm">
+  <label>Complaint / Problem</label><textarea id="pc"></textarea>
+  <button class="primary big" onclick="submitAddPatient()">Save & Continue</button></div>`;
+}
+async function submitAddPatient(){
+  const p = {relation:document.getElementById("rel").value||"Myself", fullName:document.getElementById("pf").value,
+    age:+document.getElementById("pa").value||0, gender:document.getElementById("pg").value,
+    mobile:document.getElementById("pm").value, complaint:document.getElementById("pc").value};
+  if(!p.fullName) return alert("Enter patient name");
+  if(!fb.ready){ alert("Firebase not connected yet — data won't be saved. Add your config at the top of this file first."); return; }
+  const id = await addPatientToFirestore(p);
+  S.patients.push({id, ...p});
+  S.selectedPatientId = id;
+  goHome();
+}
+
+function homeView(){
+  return `${header("Home")}<div class="screen">
+  ${S.appointment ? appointmentCard() : `<div class="card center"><p>No active appointment.</p><button class="primary" onclick="setScreen('doctor')">Find a Doctor</button></div>`}
+  </div>${nav('home')}`;
+}
+
+function appointmentCard(){
+  const ap = S.appointment;
+  return `<div class="card">
+  <h3>My Appointment</h3>
+  <div class="kpi"><span>Doctor</span><b>${esc(S.doctor?.name||"")}</b></div>
+  <div class="kpi"><span>Status</span><span class="tag">${esc(ap.status)}</span></div>
+  <div class="kpi"><span>Token</span><b>${ap.tokenNumber ?? "Waiting for assignment"}</b></div>
+  <button class="secondary big" onclick="setScreen('token')">Track Live Queue</button>
+  </div>`;
+}
+
+function doctorView(){
+  if(!S.doctor) return `${header("Find Doctor")}<div class="screen"><p>Loading…</p></div>${nav('doctors')}`;
+  const d = S.doctor;
+  return `${header("Doctor")}<div class="screen">
+  <div class="card doctor">
+  <div class="avatar">👨‍⚕️</div>
+  <div><h3>${esc(d.name)}</h3><p>${esc(d.specialty)}</p>
+  ${(d.qualifications||[]).map(q=>`<div class="small">${esc(q)}</div>`).join("")}
+  <p class="small">${esc(d.experience)}</p></div></div>
+  <div class="card">
+  <div class="kpi"><span>Clinic</span><b>${esc(d.clinicName)}</b></div>
+  <div class="kpi"><span>Hours</span><b>${esc(d.workingHours)}</b></div>
+  <div class="kpi"><span>Total Amount</span><b>₹${(d.consultationFee+d.platformFee)}</b></div>
+  <div class="kpi"><span>Current Token</span><b>#${S.queueLive?.currentToken ?? "–"}</b></div>
+  </div>
+  <button class="primary big" onclick="setScreen('book')">Book Appointment</button>
+  <button class="outline big" onclick="emergency()">Emergency Help</button>
+  </div>${nav('doctors')}`;
+}
+function emergency(){ alert("Emergency contact is admin-configured. For real emergencies, contact appropriate emergency medical services."); }
+
+function bookView(){
+  const p = selectedPatient();
+  if(!p) return `${header()}<div class="screen"><p>Select a patient first.</p><button class="primary" onclick="setScreen('selectPatient')">Select Patient</button></div>`;
+  return `${header("Book Appointment")}<div class="screen">
+  <div class="card">
+  <div class="kpi"><span>Patient</span><b>${esc(p.fullName)}</b></div>
+  <div class="kpi"><span>Doctor</span><b>${esc(S.doctor.name)}</b></div>
+  <div class="kpi"><span>Complaint</span><b>${esc(p.complaint||"-")}</b></div>
+  </div>
+  <h3>Payment Options</h3>
+  <button class="primary big" onclick="setScreen('payment');S.payType='online'">Pay Consultation Online — ₹${S.doctor.consultationFee+S.doctor.platformFee}</button>
+  <button class="secondary big" onclick="setScreen('payment');S.payType='cash'">Cash at Clinic (Pay ₹${S.doctor.serviceFee} service fee online)</button>
+  </div>${nav('doctors')}`;
+}
+
+function paymentView(){
+  const d=S.doctor, online = S.payType==="online";
+  const amount = online ? (d.consultationFee+d.platformFee) : d.serviceFee;
+  return `${header("Payment")}<div class="screen">
+  <div class="card">
+  ${online ? `<div class="kpi"><span>Total Payable</span><b>₹${amount}</b></div>` :
+  `<div class="kpi"><span>Doctor Fee</span><b>₹${d.consultationFee} – Cash at Clinic</b></div><div class="kpi"><span>ClinicQ Service Fee</span><b>₹${amount} – Pay Online</b></div>
+  <p>${'यह ₹'+d.serviceFee+' शुल्क ClinicQ की queue-management service के लिए है — आपको clinic में घंटों इंतज़ार नहीं करना पड़ेगा।'}</p>`}
+  </div>
+  <button class="primary big" onclick="doPayment('${online?'online':'cash_at_clinic'}', ${amount})">Pay Now (Demo) — ₹${amount}</button>
+  </div>${nav('doctors')}`;
+}
+
+async function doPayment(paymentType, amount){
+  if(!fb.ready){ alert("Firebase not connected yet — connect it first to save real appointments."); return; }
+  const p = selectedPatient();
+  const id = await createAppointment({patient:p, paymentType, amountPaid:amount});
+  listenAppointment(id);
+  setScreen("waiting");
+}
+
+function waitingView(){
+  return `${header("Payment Successful")}<div class="screen">
+  <div class="success">Payment Successful ✓</div>
+  <div class="card">
+  <h3>Appointment Request Submitted</h3>
+  <p>Your payment has been received. The clinic operator will assign your token number according to the current clinic queue.</p>
+  <div class="kpi"><span>Status</span><span class="tag warning">${esc(S.appointment?.status||"waiting_for_token")}</span></div>
+  </div>
+  <button class="primary big" onclick="setScreen('token')">Go to My Token</button>
+  </div>${nav('token')}`;
+}
+
+function tokenView(){
+  if(!S.appointment) return `${header("My Token")}<div class="screen"><p>No active appointment yet.</p></div>${nav('token')}`;
+  const ap = S.appointment, q = S.queueLive;
+  const assigned = !!ap.tokenNumber;
+  return `${header("My Token")}<div class="screen">
+  ${assigned ? `
+  <div class="token">#${ap.tokenNumber}</div><div class="tokenLabel">Your Token</div>
+  <div class="card">
+  <div class="kpi"><span>Current Token</span><b>#${q?.currentToken ?? "–"}</b></div>
+  <div class="kpi"><span>Patients Ahead</span><b>${Math.max(0, ap.tokenNumber-(q?.currentToken||0))}</b></div>
+  <div class="kpi"><span>Estimated Wait</span><b>${waitMinutes(ap.tokenNumber)} min</b></div>
+  </div>` : `<div class="alert">Waiting for the clinic operator to assign your token. This screen updates automatically — no need to refresh.</div>`}
+  </div>${nav('token')}`;
+}
+
+function profileView(){
+  const p = selectedPatient();
+  return `${header("Profile")}<div class="screen">
+  <div class="card"><b>${p?esc(p.fullName):"No patient selected"}</b></div>
+  <button class="outline big" onclick="setScreen('selectPatient')">Switch / Add Family Patient</button>
+  </div>${nav('profile')}`;
+}
+
+render();
+</script>
+</body>
+</html>

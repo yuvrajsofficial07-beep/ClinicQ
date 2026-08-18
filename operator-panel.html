@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ClinicQ — Operator Panel</title>
+<style>
+:root{--blue:#1769ff;--dark:#17324d;--muted:#64788a;--bg:#f4f8fc;--line:#e2eaf2;--green:#18864b;--orange:#9a6500;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--dark)}
+button,input,select{font:inherit}button{border:0;border-radius:12px;padding:12px 16px;font-weight:750;cursor:pointer}
+.primary{background:var(--blue);color:#fff}.secondary{background:#e9f1ff;color:#1258c4}.outline{background:#fff;border:1px solid var(--line);color:var(--dark)}.danger{background:#ffe9e7;color:var(--red)}
+.wrap{max-width:900px;margin:auto;padding:20px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.logo{font-size:24px;font-weight:900}.logo span{color:var(--blue)}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 5px 18px #17324d0a}
+.kpi{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eef2f5}.kpi:last-child{border-bottom:0}.kpi b{font-size:18px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.tag{display:inline-block;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:750;background:#eaf7ef;color:var(--green)}.warning{background:#fff4d5;color:var(--orange)}
+.bignum{font-size:48px;font-weight:950;color:var(--blue)}
+.connbar{background:#b42318;color:#fff;text-align:center;font-size:12px;padding:8px;border-radius:10px;margin-bottom:14px}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div id="connbar" class="connbar hidden">⚠ Firebase not configured yet — see FIREBASE_SETUP_NOTES.md</div>
+<header><div class="logo">Clinic<span>Q</span> — Operator Panel</div><button class="outline" onclick="callNext()">Call Next Token ▶</button></header>
+<div id="app"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+
+<script>
+/* PASTE THE SAME FIREBASE CONFIG AS patient-app.html */
+const firebaseConfig = {
+  apiKey: "AIzaSyDsk5VfH0d2UWa_60E_UxQbCCRLDzFsiGA",
+  authDomain: "clinic-a4513.firebaseapp.com",
+  projectId: "clinic-a4513",
+  storageBucket: "clinic-a4513.firebasestorage.app",
+  messagingSenderId: "949075919558",
+  appId: "1:949075919558:web:aad21915e2cea6e5588dc7",
+  measurementId: "G-JZV455CNCV"
+};
+
+let fb = { ready:false };
+try{
+  if(firebaseConfig.apiKey!=="REPLACE_ME"){
+    firebase.initializeApp(firebaseConfig);
+    fb.db = firebase.firestore();
+    fb.ready = true;
+  } else {
+    document.getElementById("connbar").classList.remove("hidden");
+  }
+}catch(e){ console.error(e); document.getElementById("connbar").classList.remove("hidden"); }
+
+const DOCTOR_ID = "d1";
+let queueLive = {currentToken:0,status:"OPEN"};
+let pending = [];   // appointments waiting_for_token
+let active = [];    // appointments with a token, not yet completed
+
+function esc(x){return String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+
+function listenAll(){
+  if(!fb.ready) return;
+
+  // live queue doc
+  fb.db.collection("queue").doc(DOCTOR_ID).onSnapshot(doc=>{
+    queueLive = doc.exists ? doc.data() : {currentToken:0,status:"OPEN"};
+    render();
+  });
+
+  // ClinicQ online bookings waiting for a token — this is the operator's action queue
+  fb.db.collection("appointments")
+    .where("doctorId","==",DOCTOR_ID)
+    .where("status","==","waiting_for_token")
+    .onSnapshot(snap=>{
+      pending = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      render();
+    });
+
+  // Everyone currently in the live queue (token assigned, not completed/cancelled)
+  fb.db.collection("appointments")
+    .where("doctorId","==",DOCTOR_ID)
+    .where("status","in",["waiting","current"])
+    .onSnapshot(snap=>{
+      active = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>a.tokenNumber-b.tokenNumber);
+      render();
+    });
+}
+
+function nextTokenNumber(){
+  const highestActive = active.reduce((m,a)=>Math.max(m,a.tokenNumber||0), 0);
+  return Math.max(queueLive.currentToken+1, highestActive+1);
+}
+
+// CRITICAL: this is the ONLY place a token number is created — never automatically on the patient side.
+async function assignToken(appointmentId){
+  if(!fb.ready) return;
+  const token = nextTokenNumber();
+  await fb.db.collection("appointments").doc(appointmentId).update({
+    tokenNumber: token,
+    status: "waiting",
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+async function callNext(){
+  if(!fb.ready){ alert("Connect Firebase first."); return; }
+  const next = queueLive.currentToken + 1;
+  await fb.db.collection("queue").doc(DOCTOR_ID).set({
+    currentToken: next, status:"OPEN", lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+  }, {merge:true});
+  // mark matching appointment(s) as current/completed
+  active.forEach(async a=>{
+    if(a.tokenNumber === next){
+      await fb.db.collection("appointments").doc(a.id).update({status:"current", updatedAt: firebase.firestore.FieldValue.serverTimestamp()});
+    } else if(a.tokenNumber < next){
+      await fb.db.collection("appointments").doc(a.id).update({status:"completed", updatedAt: firebase.firestore.FieldValue.serverTimestamp()});
+    }
+  });
+}
+
+function render(){
+  document.getElementById("app").innerHTML = `
+  <div class="card">
+    <div class="kpi"><span>Current Token</span><span class="bignum">#${queueLive.currentToken}</span></div>
+    <div class="kpi"><span>Queue Status</span><span class="tag">${esc(queueLive.status)}</span></div>
+  </div>
+
+  <div class="card">
+    <h3>Online Booking Requests — Waiting for Token (${pending.length})</h3>
+    <table><thead><tr><th>Patient</th><th>Age</th><th>Complaint</th><th>Payment</th><th></th></tr></thead><tbody>
+    ${pending.map(p=>`<tr>
+      <td>${esc(p.patientName)}</td><td>${p.patientAge}</td><td>${esc(p.complaint||"-")}</td>
+      <td>${p.paymentType==="online"?"₹"+p.amountPaid+" Online":"₹"+p.amountPaid+" Service Fee (Cash consult)"}</td>
+      <td><button class="primary" onclick="assignToken('${p.id}')">Assign Token #${nextTokenNumber()}</button></td>
+    </tr>`).join("") || `<tr><td colspan="5" class="small">No pending requests.</td></tr>`}
+    </tbody></table>
+  </div>
+
+  <div class="card">
+    <h3>Live Queue (${active.length})</h3>
+    <table><thead><tr><th>Token</th><th>Patient</th><th>Complaint</th><th>Status</th></tr></thead><tbody>
+    ${active.map(a=>`<tr>
+      <td><b>#${a.tokenNumber}</b></td><td>${esc(a.patientName)}</td><td>${esc(a.complaint||"-")}</td>
+      <td><span class="tag ${a.status==='current'?'':'warning'}">${esc(a.status)}</span></td>
+    </tr>`).join("") || `<tr><td colspan="4" class="small">Queue empty.</td></tr>`}
+    </tbody></table>
+  </div>
+  `;
+}
+
+listenAll();
+render();
+</script>
+</body>
+</html>

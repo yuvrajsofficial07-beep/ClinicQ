@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>ClinicQ — One-Time Database Seed</title>
+<style>body{font-family:system-ui,Arial;max-width:640px;margin:60px auto;padding:0 20px;color:#17324d}
+button{background:#1769ff;color:#fff;border:0;border-radius:10px;padding:14px 20px;font-size:16px;font-weight:700;cursor:pointer}
+pre{background:#f4f8fc;padding:14px;border-radius:10px;overflow:auto;font-size:13px}
+.ok{color:#18864b;font-weight:700}.err{color:#b42318;font-weight:700}</style>
+</head>
+<body>
+<h2>ClinicQ — One-Time Database Seed</h2>
+<p>Ye page sirf <b>ek baar</b> chalani hai. Isse tumhare Firestore me starting <code>doctors/d1</code> aur <code>queue/d1</code> documents ban jayenge, jo Patient App aur Operator Panel dono ko chahiye.</p>
+<button onclick="seed()">Run Seed Now</button>
+<pre id="log">Waiting…</pre>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDsk5VfH0d2UWa_60E_UxQbCCRLDzFsiGA",
+  authDomain: "clinic-a4513.firebaseapp.com",
+  projectId: "clinic-a4513",
+  storageBucket: "clinic-a4513.firebasestorage.app",
+  messagingSenderId: "949075919558",
+  appId: "1:949075919558:web:aad21915e2cea6e5588dc7",
+  measurementId: "G-JZV455CNCV"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const log = m=>document.getElementById("log").textContent += "\n"+m;
+
+async function seed(){
+  document.getElementById("log").textContent = "Starting…";
+  try{
+    await db.collection("doctors").doc("d1").set({
+      name:"Dr. Saurav Gupta",
+      specialty:"Neurologist",
+      qualifications:["DM – Ram Manohar Lohia","MD – KGMU","MBBS – GRMC"],
+      experience:"16 Years Experience",
+      clinicName:"Brain and Neurology Clinic",
+      clinicAddress:"Brain and Neurology Clinic",
+      consultationFee:500,
+      platformFee:100,
+      serviceFee:20,
+      avgConsultationMinutes:5,
+      workingHours:"10:00 AM – 2:00 PM",
+      upiId:"clinicq@upi",
+      emergencyNumber:"To be configured by Admin",
+      isActive:true
+    });
+    log("✔ doctors/d1 created");
+
+    await db.collection("queue").doc("d1").set({
+      currentToken:24,
+      status:"OPEN",
+      lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    log("✔ queue/d1 created");
+
+    log("\nDONE. You can now open patient-app.html and operator-panel.html.");
+  }catch(e){
+    log("\n✖ ERROR: "+e.message);
+    log("\nIf this says 'permission-denied' — go to Firestore Database → Rules in Firebase console and make sure you're still in test mode (allow read, write: if true; until <date>).");
+  }
+}
+</script>
+</body>
+</html>

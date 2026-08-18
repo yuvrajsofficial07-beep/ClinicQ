@@ -52,6 +52,16 @@ label{display:block;font-size:13px;font-weight:750;margin:13px 0 6px}input,selec
 .tv .nextNum{font-size:56px;font-weight:900;color:#fff}
 .tv .tvFooter{margin-top:50px;color:#7691ac;font-size:16px}
 @media(max-width:700px){.tv .nowNum{font-size:120px}.tv .nextNum{font-size:36px}}
+
+/* ===== ClinicQ Live Experience ===== */
+.liveCard{position:relative;overflow:hidden}.liveCard::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 20%,rgba(255,255,255,.42) 48%,transparent 72%);transform:translateX(-120%);animation:cardShimmer 3.2s ease-in-out infinite;pointer-events:none}@keyframes cardShimmer{0%,55%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+.pulseRing{position:relative}.pulseRing::after{content:"";position:absolute;inset:-4px;border:2px solid #3b82f6;border-radius:inherit;opacity:0;animation:ringPulse 1.8s ease-out infinite;pointer-events:none}@keyframes ringPulse{0%{transform:scale(.96);opacity:.55}100%{transform:scale(1.06);opacity:0}}
+.tokenPop{animation:tokenPop .55s cubic-bezier(.2,.8,.2,1)}@keyframes tokenPop{0%{transform:scale(.65);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.slideUp{animation:slideUp .45s ease both}@keyframes slideUp{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+.doctorOnline{display:inline-flex;align-items:center;gap:6px;color:#127a3f;font-size:11px;font-weight:800}.doctorOnline i{width:7px;height:7px;border-radius:50%;background:#1db954;box-shadow:0 0 0 4px #1db95422;animation:onlinePulse 1.6s infinite}@keyframes onlinePulse{50%{box-shadow:0 0 0 7px #1db95400}}
+.progressTrack{height:8px;background:#edf2f7;border-radius:999px;overflow:hidden;margin:8px 0}.progressBar{height:100%;background:linear-gradient(90deg,var(--blue),#60a5fa);border-radius:999px;transition:width .7s ease}
+.nextSlot{border:1px solid #dce8f7;background:linear-gradient(135deg,#f7fbff,#eef5ff);border-radius:15px;padding:13px}.statusHero{background:linear-gradient(135deg,#1769ff,#4f8dfd);color:#fff;border-radius:20px;padding:20px;box-shadow:0 10px 25px #1769ff26;position:relative;overflow:hidden}.statusHero::before{content:"";position:absolute;width:180px;height:180px;border-radius:50%;right:-60px;top:-80px;background:#ffffff18}.statusHero p,.statusHero .small{color:#eaf2ff}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important}}
 </style>
 </head>
 <body>
@@ -118,6 +128,11 @@ async function loadDoctor(){
   const doc = await fb.db.collection("doctors").doc(selectedDoctorId).get();
   S.doctor = doc.exists ? doc.data() : null;
 }
+
+function timeToMinutes(v){ if(!v)return null; const m=String(v).match(/(\d{1,2}):(\d{2})/); if(!m)return null; let h=+m[1],n=+m[2]; if(/pm/i.test(v)&&h<12)h+=12; if(/am/i.test(v)&&h===12)h=0; return h*60+n; }
+function doctorSchedule(){ const d=S.doctor||{}; let start=d.consultationStart||"",end=d.consultationEnd||""; if(!start&&d.workingHours){const x=String(d.workingHours).split(/\s*(?:-|–|to)\s*/i);start=x[0]||"";end=x[1]||"";} return {start,end,days:Array.isArray(d.consultationDays)?d.consultationDays:(Array.isArray(d.workingDays)?d.workingDays:[])}; }
+function getAvailability(){ const d=S.doctor||{},sch=doctorSchedule(),now=new Date(),day=now.toLocaleDateString('en-US',{weekday:'long'}),cur=now.getHours()*60+now.getMinutes(),sm=timeToMinutes(sch.start),em=timeToMinutes(sch.end); const dayOk=!sch.days.length||sch.days.some(x=>String(x).toLowerCase().startsWith(day.slice(0,3).toLowerCase())); return {open:dayOk&&(sm===null||em===null||cur>=sm&&cur<em),day,...sch}; }
+function nextAvailableText(){ const a=getAvailability(); if(a.open)return 'Available now'; if(a.days.length)return `Next available: ${a.days[0]}${a.start?' • '+a.start:''}`; return a.start?`Next available: ${a.start}`:'Consultation hours ended'; }
 
 // Fetch the list of doctors patients can choose from
 async function loadDoctorsList(){
@@ -351,26 +366,15 @@ async function submitAddPatient(){
 }
 
 function homeView(){
-  return `${header("Home")}<div class="screen">
-  ${S.appointment ? appointmentCard() : `<div class="card center"><p>No active appointment.</p><button class="primary" onclick="goDoctorsList()">Find a Doctor</button></div>`}
-  </div>${nav('home')}`;
+  return `${header("Home")}<div class="screen">${S.appointment ? appointmentCard() : `<div class="statusHero slideUp"><div class="liveBadge" style="background:#ffffff20;color:#fff"><span class="liveDot"></span>CLINICQ LIVE</div><h1 style="color:#fff;margin-top:12px">No active appointment</h1><p>Choose a doctor and book your place in the queue from home.</p><button style="background:#fff;color:#1769ff" class="big" onclick="goDoctorsList()">Find a Doctor →</button></div>`}</div>${nav('home')}`;
 }
 
+
 function appointmentCard(){
-  const ap = S.appointment;
-  const assigned = !!ap.tokenNumber;
-  const near = assigned && S.queueLive && (ap.tokenNumber - S.queueLive.currentToken) <= 2;
-  return `<div class="card" style="${assigned?'border:2px solid '+(near?'#b42318':'#18864b'):''}">
-  <h3>My Appointment</h3>
-  <div class="kpi"><span>Doctor</span><b>${esc(S.doctor?.name||"")}</b></div>
-  <div class="kpi"><span>Status</span><span class="tag ${assigned?(near?'dangerTag':''):'warning'}">${assigned ? (near?'Your turn is near!':'Token Assigned — #'+ap.tokenNumber) : esc(ap.status)}</span></div>
-  <div class="kpi"><span>Token</span><b>${ap.tokenNumber ?? "Waiting for assignment"}</b></div>
-  ${assigned ? `
-  <div class="kpi"><span>Current Token (Clinic)</span><span style="display:flex;align-items:center;gap:8px"><span class="liveBadge"><span class="liveDot"></span>LIVE</span><b>#${S.queueLive?.currentToken ?? "–"}</b></span></div>
-  <div class="kpi"><span>Estimated Wait</span><b>${waitMinutes(ap.tokenNumber)} min</b></div>` : ""}
-  <button class="secondary big" onclick="setScreen('token')">Track Live Queue</button>
-  </div>`;
+  const ap=S.appointment,assigned=!!ap.tokenNumber,near=assigned&&S.queueLive&&(ap.tokenNumber-S.queueLive.currentToken)<=2,ahead=assigned&&S.queueLive?Math.max(0,ap.tokenNumber-S.queueLive.currentToken):null,progress=assigned&&S.queueLive?Math.max(5,Math.min(100,100-ahead*18)):8;
+  return `<div class="statusHero slideUp ${near?'pulseRing':''}"><div style="display:flex;justify-content:space-between;align-items:center"><div class="liveBadge" style="background:#ffffff20;color:#fff"><span class="liveDot"></span>LIVE QUEUE</div><span class="small" style="color:#fff">${esc(ap.status||'Waiting')}</span></div><h2 style="color:#fff;margin-top:15px">${esc(S.doctor?.name||'Your Doctor')}</h2><p>${assigned?`Token #${ap.tokenNumber} • ${ahead===0?'Your turn now':ahead+' patient'+(ahead===1?'':'s')+' ahead'}`:'Booking confirmed — waiting for token assignment'}</p>${assigned?`<div class="progressTrack" style="background:#ffffff30"><div class="progressBar" style="width:${progress}%;background:#fff"></div></div><div style="display:flex;justify-content:space-between;font-size:12px;color:#eaf2ff"><span>Current #${S.queueLive?.currentToken??'–'}</span><span>Estimated ${waitMinutes(ap.tokenNumber)} min</span></div>`:''}<button style="background:#fff;color:#1769ff;width:100%;margin-top:15px" onclick="setScreen('token')">Track Live Queue →</button></div><div class="card slideUp"><div class="kpi"><span>Patient</span><b>${esc(selectedPatient()?.fullName||'')}</b></div><div class="kpi"><span>Clinic</span><b>${esc(S.doctor?.clinicName||'')}</b></div><div class="kpi"><span>Consultation</span><b>₹${S.doctor?.consultationFee||0}</b></div></div>`;
 }
+
 
 function initials(name){ return (name||"").replace(/^Dr\.?\s*/i,"").split(" ").filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase(); }
 function doctorsListView(){
@@ -387,24 +391,11 @@ function doctorsListView(){
 
 function doctorView(){
   if(!S.doctor) return `${header("Find Doctor")}<div class="screen"><p>Loading…</p></div>${nav('doctors')}`;
-  const d = S.doctor;
-  return `${header("Doctor")}<div class="screen">
-  <div class="card doctor">
-  <div class="avatarG">${initials(d.name)}</div>
-  <div><h3>${esc(d.name)}</h3><span class="tag">${esc(d.specialty)}</span>
-  ${(d.qualifications||[]).map(q=>`<div class="small" style="margin-top:4px">${esc(q)}</div>`).join("")}
-  <p class="small">${esc(d.experience)}</p></div></div>
-  <div class="card">
-  <div class="kpi"><span>Clinic</span><b>${esc(d.clinicName)}</b></div>
-  <div class="kpi"><span>Hours</span><b>${esc(d.workingHours)}</b></div>
-  <div class="kpi"><span>Total Amount</span><b>₹${(d.consultationFee+d.platformFee)}</b></div>
-  <div class="kpi"><span>Current Token</span><span style="display:flex;align-items:center;gap:8px"><span class="liveBadge"><span class="liveDot"></span>LIVE</span><b>#${S.queueLive?.currentToken ?? "–"}</b></span></div>
-  </div>
-  <button class="primary big" onclick="tryBookAppointment()">Book Appointment</button>
-  <button class="outline big" onclick="emergency()">Emergency Help</button>
-  <button class="outline big" onclick="window.open('?tv='+selectedDoctorId,'_blank')">📺 Launch TV Mode</button>
-  </div>${nav('doctors')}`;
+  const d=S.doctor,av=getAvailability(),sch=doctorSchedule();
+  return `${header("Doctor")}<div class="screen"><div class="card doctor slideUp"><div class="avatarG">${initials(d.name)}</div><div><h3>${esc(d.name)}</h3><span class="tag">${esc(d.specialty)}</span><div class="doctorOnline" style="margin-top:6px"><i></i>${av.open?'Available now':'Currently unavailable'}</div>${(d.qualifications||[]).map(q=>`<div class="small" style="margin-top:4px">${esc(q)}</div>`).join('')}<p class="small">${esc(d.experience)}</p></div></div><div class="card"><div class="kpi"><span>Clinic</span><b>${esc(d.clinicName)}</b></div><div class="kpi"><span>Hours</span><b>${esc(sch.start&&sch.end?sch.start+' – '+sch.end:d.workingHours||'Not set')}</b></div><div class="kpi"><span>Days</span><b>${esc(sch.days.join(', ')||'As per clinic schedule')}</b></div><div class="kpi"><span>Current Token</span><span style="display:flex;align-items:center;gap:8px"><span class="liveBadge"><span class="liveDot"></span>LIVE</span><b>#${S.queueLive?.currentToken ?? '–'}</b></span></div><div class="kpi"><span>Consultation</span><b>${d.avgConsultationMinutes||5} min</b></div><div class="kpi"><span>Total Amount</span><b>₹${(d.consultationFee+d.platformFee)}</b></div></div>${!av.open?`<div class="nextSlot"><b>Consultation hours ended</b><p>${nextAvailableText()}</p></div>`:''}<button class="primary big" onclick="tryBookAppointment()">${av.open?'Book Appointment':'Book for Next Available →'}</button><button class="outline big" onclick="emergency()">Emergency Help</button><button class="outline big" onclick="window.open('?tv='+selectedDoctorId,'_blank')">📺 Launch TV Mode</button></div>${nav('doctors')}`;
 }
+
+
 function hasActiveAppointment(){
   return S.appointment && S.appointment.doctorId===selectedDoctorId && !["completed","cancelled","no_show"].includes(S.appointment.status);
 }
@@ -487,34 +478,17 @@ async function trackByMobile(){
 }
 
 function tokenView(){
-  if(!S.appointment) return `${header("My Token")}<div class="screen">
-  <p>No active appointment yet.</p>
-  <div class="card"><h3>Walk-in patient? Track your token</h3>
-  <label>Mobile Number</label><input id="trackMobile" placeholder="Enter mobile number used at clinic">
-  <button class="primary big" onclick="trackByMobile()">Find My Token</button>
-  <div id="trackErr" class="small" style="color:#b42318;margin-top:8px"></div>
-  </div></div>${nav('token')}`;
-  const ap = S.appointment, q = S.queueLive;
-  const assigned = !!ap.tokenNumber;
-  return `${header("My Token")}<div class="screen">
-  ${assigned ? `
-  <div class="token">#${ap.tokenNumber}</div><div class="tokenLabel">Your Token</div>
-  <div class="card">
-  <div class="kpi"><span>Current Token</span><span style="display:flex;align-items:center;gap:8px"><span class="liveBadge"><span class="liveDot"></span>LIVE</span><b>#${q?.currentToken ?? "–"}</b></span></div>
-  <div class="kpi"><span>Patients Ahead</span><b>${Math.max(0, ap.tokenNumber-(q?.currentToken||0))}</b></div>
-  <div class="kpi"><span>Estimated Wait</span><b>${waitMinutes(ap.tokenNumber)} min</b></div>
-  </div>
-  ${("Notification" in window && Notification.permission!=="granted") ? `<button class="outline big" onclick="requestNotifyPermission()">🔔 Enable Turn Reminder</button>` : ""}` : `<div class="alert">Waiting for the clinic operator to assign your token. This screen updates automatically — no need to refresh.</div>`}
-  </div>${nav('token')}`;
+  if(!S.appointment) return `${header("My Token")}<div class="screen"><p>No active appointment yet.</p><div class="card"><h3>Walk-in patient? Track your token</h3><label>Mobile Number</label><input id="trackMobile" placeholder="Enter mobile number used at clinic"><button class="primary big" onclick="trackByMobile()">Find My Token</button><div id="trackErr" class="small" style="color:#b42318;margin-top:8px"></div></div></div>${nav('token')}`;
+  const ap=S.appointment,q=S.queueLive,assigned=!!ap.tokenNumber,ahead=assigned&&q?Math.max(0,ap.tokenNumber-q.currentToken):null;
+  return `${header("My Token")}<div class="screen">${assigned?`<div class="card center liveCard tokenPop"><div class="liveBadge"><span class="liveDot"></span>LIVE • QUEUE UPDATES AUTOMATICALLY</div><div class="token">#${ap.tokenNumber}</div><div class="tokenLabel">Your Token</div>${ahead===0?`<div class="success" style="margin-top:15px"><b>🎉 It's your turn!</b><br>Please proceed to the doctor.</div>`:`<div class="card muted" style="margin:14px 0 0"><div class="kpi"><span>Current Token</span><b>#${q?.currentToken??'–'}</b></div><div class="kpi"><span>Patients Ahead</span><b>${ahead}</b></div><div class="kpi"><span>Estimated Wait</span><b>${waitMinutes(ap.tokenNumber)} min</b></div><div class="progressTrack"><div class="progressBar" style="width:${Math.max(5,Math.min(100,100-ahead*18))}%"></div></div><div class="small">We’ll update this screen live.</div></div>`}</div><div class="card slideUp"><div class="queueStep" style="display:flex;align-items:center;gap:10px;padding:10px 0"><span style="width:11px;height:11px;border-radius:50%;background:#1769ff"></span><div><b>Booking confirmed</b><div class="small">Your appointment is active</div></div></div><div class="queueStep" style="display:flex;align-items:center;gap:10px;padding:10px 0"><span style="width:11px;height:11px;border-radius:50%;background:${ahead===0?'#1db954':'#d9e2eb'}"></span><div><b>Waiting in queue</b><div class="small">Current token #${q?.currentToken??'–'}</div></div></div><div class="queueStep" style="display:flex;align-items:center;gap:10px;padding:10px 0"><span style="width:11px;height:11px;border-radius:50%;background:#d9e2eb"></span><div><b>Consultation</b><div class="small">You’ll be notified when called</div></div></div></div>${("Notification" in window&&Notification.permission!=="granted")?`<button class="outline big" onclick="requestNotifyPermission()">🔔 Enable Turn Reminder</button>`:''}`:`<div class="alert">Waiting for the clinic operator to assign your token. This screen updates automatically — no need to refresh.</div>`}</div>${nav('token')}`;
 }
 
+
 function profileView(){
-  const p = selectedPatient();
-  return `${header("Profile")}<div class="screen">
-  <div class="card"><b>${p?esc(p.fullName):"No patient selected"}</b></div>
-  <button class="outline big" onclick="setScreen('selectPatient')">Switch / Add Family Patient</button>
-  </div>${nav('')}`;
+  const p=S.patients.find(x=>x.id===S.selectedPatientId);
+  return `${header("Profile")}<div class="screen"><div class="card"><b>${p?esc(p.fullName):"No patient selected"}</b>${p?`<p>Age ${p.age} • ${esc(p.gender)} • ${esc(p.mobile)}</p>`:''}</div><button class="outline big" onclick="setScreen('selectPatient')">Switch / Add Family Patient</button><button class="outline big" onclick="goDoctorsList()">Find a Doctor</button><button class="outline big" onclick="alert('Settings: notifications, queue reminders and app preferences.')">⚙ Settings</button><button class="danger big" onclick="localStorage.removeItem('clinicq_demo_uid');location.reload()">Logout</button></div>${nav('')}`;
 }
+
 
 // TV Mode — standalone display for a clinic monitor. Opened via ?tv=<doctorId>, no login/patient flow needed.
 let tvDoctor=null, tvQueue={currentToken:0,status:"OPEN"};

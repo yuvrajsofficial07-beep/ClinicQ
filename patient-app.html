@@ -203,8 +203,11 @@ function render(){
 }
 
 function splashView(){
-  return `<div class="splash"><div class="logo">Clinic<span>Q</span></div>
+  return `<div class="splash">
+  <div style="font-size:64px;color:#17324d;line-height:1">⚕</div>
+  <div class="logo">Clinic<span>Q</span></div>
   <p><b>अब इंतज़ार हुआ खत्म, सीधे घर से पहुँचें डॉक्टर के पास।</b><br>No More Waiting. Reach Your Doctor from Home at the Right Time.</p>
+  <p>लाइन में नहीं, घर से करें इंतज़ार।<br><b>Don't Wait in Line, Wait from Home.</b></p>
   <button class="primary big" onclick="startApp()">Get Started</button></div>`;
 }
 async function startApp(){

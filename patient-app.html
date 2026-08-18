@@ -106,6 +106,7 @@ function listenQueue(){
   if(S.unsubQueue) S.unsubQueue();
   S.unsubQueue = fb.db.collection("queue").doc(selectedDoctorId).onSnapshot(doc=>{
     S.queueLive = doc.exists ? doc.data() : {currentToken:0,status:"OPEN"};
+    maybeNotifyTurn();
     if(S.screen==="token" || S.screen==="home") render();
   });
 }
@@ -117,6 +118,7 @@ function listenAppointment(appointmentId){
   if(S.unsubAppointment) S.unsubAppointment();
   S.unsubAppointment = fb.db.collection("appointments").doc(appointmentId).onSnapshot(doc=>{
     S.appointment = doc.exists ? {id:doc.id, ...doc.data()} : null;
+    maybeNotifyTurn();
     render();
   });
 }
@@ -183,11 +185,14 @@ async function createAppointment({patient, paymentType, amountPaid}){
    4) SCREENS
    ========================================================= */
 function header(title=""){return `<header><div class="logo">Clinic<span>Q</span></div><div class="small">${esc(title)}</div></header>`}
-function nav(active){return `<div class="nav">
+function nav(active){
+  const near = S.appointment && S.appointment.tokenNumber && S.queueLive && (S.appointment.tokenNumber - S.queueLive.currentToken) <= 2;
+  return `<div class="nav">
 <button class="${active==='home'?'active':''}" onclick="goHome()">⌂<br>Home</button>
 <button class="${active==='doctors'?'active':''}" onclick="goDoctorsList()">⌕<br>Find Doctor</button>
-<button class="${active==='token'?'active':''}" onclick="setScreen('token')">#<br>My Token</button>
-<button class="${active==='profile'?'active':''}" onclick="setScreen('profile')">●<br>Profile</button></div>`}
+<button class="${active==='token'?'active':''}" style="position:relative" onclick="setScreen('token')">#<br>My Token${near?'<span style="position:absolute;top:4px;right:24%;width:9px;height:9px;background:#e0433d;border-radius:50%"></span>':''}</button>
+<button class="${active==='profile'?'active':''}" onclick="setScreen('profile')">●<br>Profile</button></div>`;
+}
 
 async function goHome(){
   await resumeSavedAppointment();
@@ -202,6 +207,26 @@ async function chooseDoctor(id){
   await loadDoctor();
   listenQueue();
   setScreen("doctor");
+}
+
+// Browser notification (reminder) — works only while this browser/tab has permission granted.
+// This is not a native phone alarm, but shows an alert + sound similar to one.
+let notifiedTokens = new Set();
+function requestNotifyPermission(){
+  if(!("Notification" in window)){ alert("Notifications not supported on this browser."); return; }
+  Notification.requestPermission().then(p=>{ render(); });
+}
+function maybeNotifyTurn(){
+  if(!S.appointment || !S.appointment.tokenNumber || !S.queueLive) return;
+  if(!("Notification" in window) || Notification.permission!=="granted") return;
+  const ahead = S.appointment.tokenNumber - S.queueLive.currentToken;
+  const key = S.appointment.id+"_"+S.appointment.tokenNumber;
+  if(ahead<=2 && ahead>=0 && !notifiedTokens.has(key)){
+    notifiedTokens.add(key);
+    new Notification("ClinicQ — Your turn is approaching", {
+      body: `Token #${S.appointment.tokenNumber} — Current token #${S.queueLive.currentToken}. Please start heading to the clinic.`
+    });
+  }
 }
 
 function render(){
@@ -236,8 +261,32 @@ async function startApp(){
 
 function selectPatientView(){
   return `<div class="screen"><h1>Who is the appointment for?</h1>
-  ${S.patients.map(p=>`<div class="card" onclick="choosePatient('${p.id}')" style="cursor:pointer"><b>${esc(p.relation)} – ${esc(p.fullName)}</b><p>Age ${p.age} • ${esc(p.gender)}</p></div>`).join("")}
+  <p class="small">Tap to select • Press & hold to delete</p>
+  ${S.patients.map(p=>`<div class="card" style="cursor:pointer"
+    onmousedown="patientHoldStart('${p.id}')" onmouseup="patientHoldEnd()" onmouseleave="patientHoldEnd()"
+    ontouchstart="patientHoldStart('${p.id}')" ontouchend="patientHoldEnd()"
+    onclick="patientCardClick('${p.id}')">
+    <b>${esc(p.relation)} – ${esc(p.fullName)}</b><p>Age ${p.age} • ${esc(p.gender)}</p></div>`).join("")}
   <button class="secondary big" onclick="setScreen('addPatient')">+ Add New Patient</button></div>`;
+}
+let longPressTimer=null, longPressFired=false;
+function patientHoldStart(id){
+  longPressFired=false;
+  longPressTimer=setTimeout(()=>{ longPressFired=true; confirmDeletePatient(id); }, 600);
+}
+function patientHoldEnd(){ clearTimeout(longPressTimer); }
+function patientCardClick(id){
+  if(longPressFired){ longPressFired=false; return; }
+  choosePatient(id);
+}
+async function confirmDeletePatient(id){
+  const p = S.patients.find(x=>x.id===id);
+  if(!confirm(`Delete patient "${p?.fullName||''}"?\nThis cannot be undone.`)) return;
+  await fb.db.collection("users").doc(S.demoUserId).collection("patients").doc(id).delete();
+  S.patients = S.patients.filter(x=>x.id!==id);
+  clearAppointmentForPatient(id);
+  if(S.selectedPatientId===id) S.selectedPatientId=null;
+  render();
 }
 function choosePatient(id){ S.selectedPatientId=id; goHome(); }
 
@@ -271,10 +320,12 @@ function homeView(){
 
 function appointmentCard(){
   const ap = S.appointment;
-  return `<div class="card">
+  const assigned = !!ap.tokenNumber;
+  const near = assigned && S.queueLive && (ap.tokenNumber - S.queueLive.currentToken) <= 2;
+  return `<div class="card" style="${assigned?'border:2px solid '+(near?'#b42318':'#18864b'):''}">
   <h3>My Appointment</h3>
   <div class="kpi"><span>Doctor</span><b>${esc(S.doctor?.name||"")}</b></div>
-  <div class="kpi"><span>Status</span><span class="tag">${esc(ap.status)}</span></div>
+  <div class="kpi"><span>Status</span><span class="tag ${assigned?(near?'dangerTag':''):'warning'}">${assigned ? (near?'Your turn is near!':'Token Assigned — #'+ap.tokenNumber) : esc(ap.status)}</span></div>
   <div class="kpi"><span>Token</span><b>${ap.tokenNumber ?? "Waiting for assignment"}</b></div>
   <button class="secondary big" onclick="setScreen('token')">Track Live Queue</button>
   </div>`;
@@ -409,7 +460,8 @@ function tokenView(){
   <div class="kpi"><span>Current Token</span><b>#${q?.currentToken ?? "–"}</b></div>
   <div class="kpi"><span>Patients Ahead</span><b>${Math.max(0, ap.tokenNumber-(q?.currentToken||0))}</b></div>
   <div class="kpi"><span>Estimated Wait</span><b>${waitMinutes(ap.tokenNumber)} min</b></div>
-  </div>` : `<div class="alert">Waiting for the clinic operator to assign your token. This screen updates automatically — no need to refresh.</div>`}
+  </div>
+  ${("Notification" in window && Notification.permission!=="granted") ? `<button class="outline big" onclick="requestNotifyPermission()">🔔 Enable Turn Reminder</button>` : ""}` : `<div class="alert">Waiting for the clinic operator to assign your token. This screen updates automatically — no need to refresh.</div>`}
   </div>${nav('token')}`;
 }
 

@@ -19,17 +19,37 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px 6px;b
 .bignum{font-size:48px;font-weight:950;color:var(--blue)}
 .connbar{background:#b42318;color:#fff;text-align:center;font-size:12px;padding:8px;border-radius:10px;margin-bottom:14px}
 .hidden{display:none!important}
+.loginWrap{max-width:380px;margin:80px auto;background:#fff;border:1px solid var(--line);border-radius:16px;padding:26px;box-shadow:0 5px 18px #17324d0a}
+.loginWrap label{display:block;font-size:13px;font-weight:750;margin:13px 0 6px}
+.loginWrap input{width:100%;border:1px solid #ccd9e5;border-radius:12px;padding:12px;outline:none}
+.loginErr{color:var(--red);font-size:13px;margin-top:10px}
 </style>
 </head>
 <body>
 <div class="wrap">
 <div id="connbar" class="connbar hidden">⚠ Firebase not configured yet — see FIREBASE_SETUP_NOTES.md</div>
-<header><div class="logo">Clinic<span>Q</span> — Operator Panel</div><button class="outline" onclick="callNext()">Call Next Token ▶</button></header>
+
+<div id="loginScreen" class="loginWrap">
+  <div class="logo center" style="text-align:center">Clinic<span>Q</span></div>
+  <p style="text-align:center;color:var(--muted)">Operator Login</p>
+  <label>Email</label><input id="loginEmail" type="email" placeholder="operator@clinicq.com">
+  <label>Password</label><input id="loginPass" type="password">
+  <button class="primary" style="width:100%;margin-top:16px" onclick="doLogin()">Login</button>
+  <div id="loginErr" class="loginErr"></div>
+</div>
+
+<div id="mainScreen" class="hidden">
+<header><div class="logo">Clinic<span>Q</span> — Operator Panel</div>
+  <div><button class="outline" onclick="callNext()">Call Next Token ▶</button>
+  <button class="outline" onclick="doLogout()">Logout</button></div>
+</header>
 <div id="app"></div>
+</div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 
 <script>
 /* PASTE THE SAME FIREBASE CONFIG AS patient-app.html */
@@ -48,11 +68,39 @@ try{
   if(firebaseConfig.apiKey!=="REPLACE_ME"){
     firebase.initializeApp(firebaseConfig);
     fb.db = firebase.firestore();
+    fb.auth = firebase.auth();
     fb.ready = true;
   } else {
     document.getElementById("connbar").classList.remove("hidden");
   }
 }catch(e){ console.error(e); document.getElementById("connbar").classList.remove("hidden"); }
+
+async function doLogin(){
+  const email = document.getElementById("loginEmail").value.trim();
+  const pass = document.getElementById("loginPass").value;
+  const errBox = document.getElementById("loginErr");
+  errBox.textContent = "";
+  if(!fb.ready){ errBox.textContent = "Firebase not connected."; return; }
+  try{
+    await fb.auth.signInWithEmailAndPassword(email, pass);
+  }catch(e){
+    errBox.textContent = "Login failed: " + e.message;
+  }
+}
+function doLogout(){ fb.auth.signOut(); }
+
+if(fb.ready){
+  fb.auth.onAuthStateChanged(user=>{
+    if(user){
+      document.getElementById("loginScreen").classList.add("hidden");
+      document.getElementById("mainScreen").classList.remove("hidden");
+      listenAll();
+    } else {
+      document.getElementById("loginScreen").classList.remove("hidden");
+      document.getElementById("mainScreen").classList.add("hidden");
+    }
+  });
+}
 
 const DOCTOR_ID = "d1";
 let queueLive = {currentToken:0,status:"OPEN"};
@@ -151,7 +199,6 @@ function render(){
   `;
 }
 
-listenAll();
 render();
 </script>
 </body>

@@ -113,7 +113,7 @@ function listenQueue(){
 // LIVE listener on this patient's active appointment (so tokenNumber appears the moment operator assigns it)
 function listenAppointment(appointmentId){
   if(!fb.ready) return;
-  localStorage.setItem("clinicq_last_appointment", appointmentId);
+  saveAppointmentForPatient(S.selectedPatientId, appointmentId);
   if(S.unsubAppointment) S.unsubAppointment();
   S.unsubAppointment = fb.db.collection("appointments").doc(appointmentId).onSnapshot(doc=>{
     S.appointment = doc.exists ? {id:doc.id, ...doc.data()} : null;
@@ -121,14 +121,33 @@ function listenAppointment(appointmentId){
   });
 }
 
-// On app start, resume tracking a previously booked appointment if one exists
+// Tracks each family patient's own active appointment separately: { patientId: appointmentId }
+function getAppointmentMap(){
+  try{ return JSON.parse(localStorage.getItem("clinicq_appointments")||"{}"); }catch(e){ return {}; }
+}
+function saveAppointmentForPatient(patientId, appointmentId){
+  if(!patientId) return;
+  const map = getAppointmentMap();
+  map[patientId] = appointmentId;
+  localStorage.setItem("clinicq_appointments", JSON.stringify(map));
+}
+function clearAppointmentForPatient(patientId){
+  const map = getAppointmentMap();
+  delete map[patientId];
+  localStorage.setItem("clinicq_appointments", JSON.stringify(map));
+}
+
+// On app start / patient switch, resume tracking THIS patient's own booked appointment (if any)
 async function resumeSavedAppointment(){
-  const savedId = localStorage.getItem("clinicq_last_appointment");
+  if(S.unsubAppointment){ S.unsubAppointment(); S.unsubAppointment=null; }
+  S.appointment = null;
+  const map = getAppointmentMap();
+  const savedId = map[S.selectedPatientId];
   if(!savedId || !fb.ready) return;
   const doc = await fb.db.collection("appointments").doc(savedId).get();
-  if(!doc.exists) return;
+  if(!doc.exists){ clearAppointmentForPatient(S.selectedPatientId); return; }
   const data = doc.data();
-  if(["completed","cancelled","no_show"].includes(data.status)) return; // don't resume finished ones
+  if(["completed","cancelled","no_show"].includes(data.status)){ clearAppointmentForPatient(S.selectedPatientId); return; }
   selectedDoctorId = data.doctorId;
   await loadDoctor();
   listenQueue();

@@ -263,6 +263,7 @@ async function addWalkIn(){
   const age = Number(document.getElementById("wiAge").value)||0;
   const mobile = document.getElementById("wiMobile").value.trim();
   const complaint = document.getElementById("wiComplaint").value.trim();
+  const payType = document.getElementById("wiPayType").value;
   const suggested = nextTokenNumber();
   const input = prompt(`Enter token number for ${name||"this patient"}\n(Suggested next: ${suggested})`, suggested);
   if(input===null) return;
@@ -270,12 +271,12 @@ async function addWalkIn(){
   if(!name || !token || token<1){ alert("Enter patient name and a valid token number."); return; }
   await fb.db.collection("appointments").add({
     userId:null, patientId:null, patientName:name, patientAge:age, patientMobile:mobile,
-    complaint, doctorId:myDoctorId, paymentType:"cash_at_clinic", amountPaid:0, paymentStatus:"verified",
+    complaint, doctorId:myDoctorId, paymentType:payType, amountPaid:0, paymentStatus:"verified",
     tokenNumber:token, status:"waiting", source:"walk_in",
     createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   });
   document.getElementById("wiName").value=""; document.getElementById("wiAge").value="";
-  document.getElementById("wiMobile").value=""; document.getElementById("wiComplaint").value="";
+  document.getElementById("wiMobile").value=""; document.getElementById("wiComplaint").value=""; document.getElementById("wiPayType").value="cash_at_clinic";
 }
 
 function render(){
@@ -291,6 +292,11 @@ function render(){
     <input id="wiAge" type="number" placeholder="Age" style="margin-bottom:8px">
     <input id="wiMobile" placeholder="Mobile number (so they can track token)" style="margin-bottom:8px">
     <input id="wiComplaint" placeholder="Complaint" style="margin-bottom:10px">
+    <label style="font-size:13px;font-weight:750;display:block;margin-bottom:6px">Payment Type</label>
+    <select id="wiPayType" style="width:100%;border:1px solid #ccd9e5;border-radius:12px;padding:12px;margin-bottom:10px">
+      <option value="cash_at_clinic">Offline / Cash at Clinic</option>
+      <option value="online">Already Paid Online</option>
+    </select>
     <button class="primary" onclick="addWalkIn()">Add & Assign Token</button>
   </div>
 

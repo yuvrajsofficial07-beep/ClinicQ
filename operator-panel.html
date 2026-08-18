@@ -280,6 +280,17 @@ async function addWalkIn(){
   document.getElementById("wiMobile").value=""; document.getElementById("wiComplaint").value=""; document.getElementById("wiAmount").value=""; document.getElementById("wiMethod").value="cash";
 }
 
+let refundResults = [];
+async function searchRefundPatient(){
+  const q = document.getElementById("refundQuery").value.trim().toLowerCase();
+  if(!q){ refundResults=[]; render(); return; }
+  const snap = await fb.db.collection("appointments").where("doctorId","==",myDoctorId).get();
+  refundResults = snap.docs.map(d=>({id:d.id, ...d.data()})).filter(a=>
+    (a.patientName||"").toLowerCase().includes(q) || (a.patientMobile||"").includes(q)
+  );
+  render();
+}
+
 async function refundPatient(id, patientName, amountPaid){
   const input = prompt(`Refund amount for ${patientName}\n(Amount paid: ₹${amountPaid})`, amountPaid);
   if(input===null) return;
@@ -289,6 +300,9 @@ async function refundPatient(id, patientName, amountPaid){
     refunded:true, refundAmount:amt, refundedAt: firebase.firestore.FieldValue.serverTimestamp(),
     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   });
+  const r = refundResults.find(x=>x.id===id);
+  if(r){ r.refunded=true; r.refundAmount=amt; }
+  render();
 }
 
 function render(){
@@ -328,16 +342,29 @@ function render(){
 
   <div class="card">
     <h3>Live Queue (${active.length})</h3>
-    <table><thead><tr><th>Token</th><th>Patient</th><th>Source</th><th>Payment</th><th>Status</th><th></th></tr></thead><tbody>
+    <table><thead><tr><th>Token</th><th>Patient</th><th>Source</th><th>Payment</th><th>Status</th></tr></thead><tbody>
     ${active.map(a=>`<tr>
       <td><b>#${a.tokenNumber}</b></td>
       <td>${esc(a.patientName)}${a.patientAge?", "+a.patientAge:""}</td>
       <td><span class="tag ${a.source==='walk_in'?'warning':''}">${a.source==='walk_in'?'Offline':'Online'}</span></td>
       <td>${a.refunded ? `<span class="tag" style="background:#ffe9e7;color:#b42318">Refunded ₹${a.refundAmount}</span>` : (a.amountPaid ? `₹${a.amountPaid}${a.paymentMethod?' ('+esc(a.paymentMethod.toUpperCase())+')':''}` : '-')}</td>
       <td><span class="tag ${a.status==='current'?'':'warning'}">${esc(a.status)}</span></td>
-      <td>${!a.refunded && a.amountPaid>0 ? `<button class="danger" onclick="refundPatient('${a.id}','${esc(a.patientName)}',${a.amountPaid})">Refund</button>` : ""}</td>
-    </tr>`).join("") || `<tr><td colspan="6" class="small">Queue empty.</td></tr>`}
+    </tr>`).join("") || `<tr><td colspan="5" class="small">Queue empty.</td></tr>`}
     </tbody></table>
+  </div>
+
+  <div class="card">
+    <h3>Refund a Patient</h3>
+    <p class="small">Search across all patients (active or completed) to process a refund.</p>
+    <input id="refundQuery" placeholder="Search by patient name or mobile number" style="margin-bottom:8px" onkeydown="if(event.key==='Enter')searchRefundPatient()">
+    <button class="outline" onclick="searchRefundPatient()">Search</button>
+    ${refundResults.length ? `<table style="margin-top:12px"><thead><tr><th>Patient</th><th>Token</th><th>Amount Paid</th><th></th></tr></thead><tbody>
+    ${refundResults.map(a=>`<tr>
+      <td>${esc(a.patientName)}${a.patientMobile?" ("+esc(a.patientMobile)+")":""}</td>
+      <td>${a.tokenNumber?"#"+a.tokenNumber:"-"}</td>
+      <td>₹${a.amountPaid||0}</td>
+      <td>${a.refunded ? `<span class="tag" style="background:#ffe9e7;color:#b42318">Refunded ₹${a.refundAmount}</span>` : (a.amountPaid>0 ? `<button class="danger" onclick="refundPatient('${a.id}','${esc(a.patientName)}',${a.amountPaid})">Refund</button>` : `<span class="small">No payment recorded</span>`)}</td>
+    </tr>`).join("")}</tbody></table>` : ""}
   </div>
   `;
 }

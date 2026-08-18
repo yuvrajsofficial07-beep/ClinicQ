@@ -257,8 +257,8 @@ function bookView(){
   <div class="kpi"><span>Complaint</span><b>${esc(p.complaint||"-")}</b></div>
   </div>
   <h3>Payment Options</h3>
-  <button class="primary big" onclick="setScreen('payment');S.payType='online'">Pay Consultation Online — ₹${S.doctor.consultationFee+S.doctor.platformFee}</button>
-  <button class="secondary big" onclick="setScreen('payment');S.payType='cash'">Cash at Clinic (Pay ₹${S.doctor.serviceFee} service fee online)</button>
+  <button class="primary big" onclick="S.payType='online';setScreen('payment')">Pay Consultation Online — ₹${S.doctor.consultationFee+S.doctor.platformFee}</button>
+  <button class="secondary big" onclick="S.payType='cash';setScreen('payment')">Cash at Clinic (Pay ₹${S.doctor.serviceFee} service fee online)</button>
   </div>${nav('doctors')}`;
 }
 

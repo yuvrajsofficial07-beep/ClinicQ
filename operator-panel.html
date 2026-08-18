@@ -263,7 +263,8 @@ async function addWalkIn(){
   const age = Number(document.getElementById("wiAge").value)||0;
   const mobile = document.getElementById("wiMobile").value.trim();
   const complaint = document.getElementById("wiComplaint").value.trim();
-  const payType = document.getElementById("wiPayType").value;
+  const method = document.getElementById("wiMethod").value;
+  const amount = Number(document.getElementById("wiAmount").value)||0;
   const suggested = nextTokenNumber();
   const input = prompt(`Enter token number for ${name||"this patient"}\n(Suggested next: ${suggested})`, suggested);
   if(input===null) return;
@@ -271,12 +272,23 @@ async function addWalkIn(){
   if(!name || !token || token<1){ alert("Enter patient name and a valid token number."); return; }
   await fb.db.collection("appointments").add({
     userId:null, patientId:null, patientName:name, patientAge:age, patientMobile:mobile,
-    complaint, doctorId:myDoctorId, paymentType:payType, amountPaid:0, paymentStatus:"verified",
-    tokenNumber:token, status:"waiting", source:"walk_in",
+    complaint, doctorId:myDoctorId, paymentType:"cash_at_clinic", paymentMethod:method, amountPaid:amount, paymentStatus:"verified",
+    tokenNumber:token, status:"waiting", source:"walk_in", refunded:false,
     createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   });
   document.getElementById("wiName").value=""; document.getElementById("wiAge").value="";
-  document.getElementById("wiMobile").value=""; document.getElementById("wiComplaint").value=""; document.getElementById("wiPayType").value="cash_at_clinic";
+  document.getElementById("wiMobile").value=""; document.getElementById("wiComplaint").value=""; document.getElementById("wiAmount").value=""; document.getElementById("wiMethod").value="cash";
+}
+
+async function refundPatient(id, patientName, amountPaid){
+  const input = prompt(`Refund amount for ${patientName}\n(Amount paid: ₹${amountPaid})`, amountPaid);
+  if(input===null) return;
+  const amt = Number(input);
+  if(!amt || amt<=0){ alert("Enter a valid refund amount."); return; }
+  await fb.db.collection("appointments").doc(id).update({
+    refunded:true, refundAmount:amt, refundedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
 }
 
 function render(){
@@ -292,32 +304,39 @@ function render(){
     <input id="wiAge" type="number" placeholder="Age" style="margin-bottom:8px">
     <input id="wiMobile" placeholder="Mobile number (so they can track token)" style="margin-bottom:8px">
     <input id="wiComplaint" placeholder="Complaint" style="margin-bottom:10px">
-    <label style="font-size:13px;font-weight:750;display:block;margin-bottom:6px">Payment Type</label>
-    <select id="wiPayType" style="width:100%;border:1px solid #ccd9e5;border-radius:12px;padding:12px;margin-bottom:10px">
-      <option value="cash_at_clinic">Offline / Cash at Clinic</option>
-      <option value="online">Already Paid Online</option>
+    <label style="font-size:13px;font-weight:750;display:block;margin-bottom:6px">Payment Method</label>
+    <select id="wiMethod" style="width:100%;border:1px solid #ccd9e5;border-radius:12px;padding:12px;margin-bottom:8px">
+      <option value="cash">Cash</option>
+      <option value="upi">UPI</option>
     </select>
+    <input id="wiAmount" type="number" placeholder="Amount Paid (₹)" style="margin-bottom:10px">
     <button class="primary" onclick="addWalkIn()">Add & Assign Token</button>
   </div>
 
   <div class="card">
     <h3>Online Booking Requests — Waiting for Token (${pending.length})</h3>
-    <table><thead><tr><th>Patient</th><th>Age</th><th>Complaint</th><th>Payment</th><th></th></tr></thead><tbody>
+    <table><thead><tr><th>Patient</th><th>Age</th><th>Source</th><th>Complaint</th><th>Payment</th><th></th></tr></thead><tbody>
     ${pending.map(p=>`<tr>
-      <td>${esc(p.patientName)}</td><td>${p.patientAge}</td><td>${esc(p.complaint||"-")}</td>
+      <td>${esc(p.patientName)}</td><td>${p.patientAge}</td>
+      <td><span class="tag">Online</span></td>
+      <td>${esc(p.complaint||"-")}</td>
       <td>${p.paymentType==="online"?"₹"+p.amountPaid+" Online":"₹"+p.amountPaid+" Service Fee (Cash consult)"}</td>
       <td><button class="primary" onclick="assignToken('${p.id}', '${esc(p.patientName)}')">Assign Token (suggested #${nextTokenNumber()})</button></td>
-    </tr>`).join("") || `<tr><td colspan="5" class="small">No pending requests.</td></tr>`}
+    </tr>`).join("") || `<tr><td colspan="6" class="small">No pending requests.</td></tr>`}
     </tbody></table>
   </div>
 
   <div class="card">
     <h3>Live Queue (${active.length})</h3>
-    <table><thead><tr><th>Token</th><th>Patient</th><th>Complaint</th><th>Status</th></tr></thead><tbody>
+    <table><thead><tr><th>Token</th><th>Patient</th><th>Source</th><th>Payment</th><th>Status</th><th></th></tr></thead><tbody>
     ${active.map(a=>`<tr>
-      <td><b>#${a.tokenNumber}</b></td><td>${esc(a.patientName)}</td><td>${esc(a.complaint||"-")}</td>
+      <td><b>#${a.tokenNumber}</b></td>
+      <td>${esc(a.patientName)}${a.patientAge?", "+a.patientAge:""}</td>
+      <td><span class="tag ${a.source==='walk_in'?'warning':''}">${a.source==='walk_in'?'Offline':'Online'}</span></td>
+      <td>${a.refunded ? `<span class="tag" style="background:#ffe9e7;color:#b42318">Refunded ₹${a.refundAmount}</span>` : (a.amountPaid ? `₹${a.amountPaid}${a.paymentMethod?' ('+esc(a.paymentMethod.toUpperCase())+')':''}` : '-')}</td>
       <td><span class="tag ${a.status==='current'?'':'warning'}">${esc(a.status)}</span></td>
-    </tr>`).join("") || `<tr><td colspan="4" class="small">Queue empty.</td></tr>`}
+      <td>${!a.refunded && a.amountPaid>0 ? `<button class="danger" onclick="refundPatient('${a.id}','${esc(a.patientName)}',${a.amountPaid})">Refund</button>` : ""}</td>
+    </tr>`).join("") || `<tr><td colspan="6" class="small">Queue empty.</td></tr>`}
     </tbody></table>
   </div>
   `;

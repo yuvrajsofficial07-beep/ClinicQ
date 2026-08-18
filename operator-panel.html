@@ -142,10 +142,15 @@ function nextTokenNumber(){
   return Math.max(queueLive.currentToken+1, highestActive+1);
 }
 
-// CRITICAL: this is the ONLY place a token number is created — never automatically on the patient side.
-async function assignToken(appointmentId){
+// CRITICAL: operator decides the token manually — never auto-assigned.
+// This lets the operator account for offline walk-in patients already in the physical queue.
+async function assignToken(appointmentId, patientName){
   if(!fb.ready) return;
-  const token = nextTokenNumber();
+  const suggested = nextTokenNumber();
+  const input = prompt(`Enter token number for ${patientName}\n(Suggested next: ${suggested} — check your offline queue before confirming)`, suggested);
+  if(input===null) return; // cancelled
+  const token = parseInt(input, 10);
+  if(!token || token<1){ alert("Enter a valid token number."); return; }
   await fb.db.collection("appointments").doc(appointmentId).update({
     tokenNumber: token,
     status: "waiting",
@@ -182,7 +187,7 @@ function render(){
     ${pending.map(p=>`<tr>
       <td>${esc(p.patientName)}</td><td>${p.patientAge}</td><td>${esc(p.complaint||"-")}</td>
       <td>${p.paymentType==="online"?"₹"+p.amountPaid+" Online":"₹"+p.amountPaid+" Service Fee (Cash consult)"}</td>
-      <td><button class="primary" onclick="assignToken('${p.id}')">Assign Token #${nextTokenNumber()}</button></td>
+      <td><button class="primary" onclick="assignToken('${p.id}', '${esc(p.patientName)}')">Assign Token (suggested #${nextTokenNumber()})</button></td>
     </tr>`).join("") || `<tr><td colspan="5" class="small">No pending requests.</td></tr>`}
     </tbody></table>
   </div>

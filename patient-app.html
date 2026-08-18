@@ -5,63 +5,32 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ClinicQ — Patient App</title>
 <style>
-:root{--blue:#1769ff;--blue2:#3b82f6;--dark:#17324d;--muted:#64788a;--bg:#eef4fb;--line:#e2eaf2;--green:#18864b;--orange:#9a6500;--red:#b42318}
-*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--dark)}
-button,input,select,textarea{font:inherit}button{border:0;border-radius:12px;padding:13px 16px;font-weight:750;cursor:pointer;transition:transform .12s}
-button:active{transform:scale(.98)}
-.primary{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 6px 16px #1769ff33}.secondary{background:#e9f1ff;color:#1258c4}.outline{background:#fff;border:1px solid var(--line);color:var(--dark)}.danger{background:#ffe9e7;color:var(--red)}
-.app{max-width:620px;margin:auto;min-height:100vh;background:#fff;box-shadow:0 0 35px #17324d12}
-header{height:68px;padding:0 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:10}
-.logo{font-size:24px;font-weight:900;letter-spacing:-.3px}.logo span{color:var(--blue)}.screen{padding:22px 20px 105px}
-.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 6px 20px #17324d0d}
-h1{font-size:28px;line-height:1.15;margin:7px 0 10px}h2{font-size:20px;margin:5px 0 12px}h3{font-size:16px;margin:0 0 8px}p{color:var(--muted);line-height:1.5;margin:7px 0}.small{font-size:12px;color:var(--muted)}.center{text-align:center}
-label{display:block;font-size:13px;font-weight:750;margin:13px 0 6px}input,select,textarea{width:100%;border:1px solid #ccd9e5;border-radius:12px;padding:13px;background:#fff;outline:none;transition:border-color .15s}input:focus,select:focus,textarea:focus{border-color:var(--blue)}textarea{min-height:85px}
-.row{display:flex;gap:10px}.row>*{flex:1}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.tag{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:750;background:#eaf7ef;color:var(--green)}.warning{background:#fff4d5;color:var(--orange)}.dangerTag{background:#ffe9e7;color:var(--red)}
-.kpi{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #eef2f5}.kpi:last-child{border-bottom:0}.kpi b{font-size:18px}
-.token{font-size:72px;line-height:1;font-weight:950;background:linear-gradient(135deg,var(--blue),var(--blue2));-webkit-background-clip:text;background-clip:text;color:transparent;text-align:center;margin:8px 0}.tokenLabel{text-align:center;color:var(--muted);font-size:13px}
-.avatar{width:56px;height:56px;border-radius:50%;background:#eaf1ff;color:var(--blue);display:grid;place-items:center;font-size:22px;font-weight:900;flex:none}
-.avatarG{width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,var(--blue),#60a5fa);color:#fff;display:grid;place-items:center;font-size:18px;font-weight:800;flex:none;letter-spacing:.5px}
-.doctor{display:flex;gap:14px;align-items:flex-start}
-.card.doctor{transition:box-shadow .15s,transform .15s}.card.doctor:active{transform:scale(.985)}
-.big{width:100%;margin-top:10px}.muted{background:#f7fafc}.success{padding:13px;border-radius:12px;background:#e9f8ef;color:#176b38}.alert{padding:13px;border-radius:12px;background:#fff4d5;color:#765600}
-.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:620px;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;z-index:20;padding:8px 6px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -6px 20px #17324d0d}
-.nav button{background:none;border:none;color:#96a7b8;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 14px;border-radius:14px;font-size:10.5px;font-weight:750;transition:background .15s,color .15s}
-.nav button.active{color:var(--blue);background:#eaf1ff}
-.nav .navDot{position:absolute;top:4px;right:16px;width:8px;height:8px;background:#e0433d;border-radius:50%;border:2px solid #fff}
-.splash{min-height:100vh;display:grid;place-items:center;text-align:center;padding:30px}.splash .logo{font-size:42px}.splash p{max-width:400px;margin:10px auto}
-.hidden{display:none!important}.back{background:none;padding:0;color:var(--blue);font-weight:750;margin-bottom:14px}
-.connbar{position:fixed;top:0;left:0;right:0;background:#b42318;color:#fff;text-align:center;font-size:12px;padding:6px;z-index:999}
-@media(min-width:700px){.app{min-height:100vh}.screen{padding-left:28px;padding-right:28px}}
-
-/* Live pulsing indicator */
-.liveBadge{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:800;color:#127a3f;background:#e8f9ef;padding:5px 11px;border-radius:999px;letter-spacing:.3px}
-.liveDot{position:relative;width:8px;height:8px;background:#1db954;border-radius:50%;flex:none}
-.liveDot::before{content:'';position:absolute;top:0;left:0;width:8px;height:8px;background:#1db954;border-radius:50%;animation:livePing 1.6s cubic-bezier(0,0,.2,1) infinite}
+/* ===== ClinicQ Zomato-level UI layer ===== */
+:root{--red:#1769ff;--red2:#60a5fa;--ink:#1c1c1c;--muted:#696969;--line:#eeeeee;--soft:#f8f8f8;--green:#149447}
+body{background:#f6f6f6;color:var(--ink);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.app{max-width:680px;background:#fff;box-shadow:0 0 45px rgba(0,0,0,.08)}
+header{height:70px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.94);backdrop-filter:blur(14px);z-index:50}
+.logo{font-size:25px;font-weight:950;letter-spacing:-.8px}.logo span{color:var(--red)}
+.screen{padding:18px 18px 112px}
+.card{border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 30px rgba(28,28,28,.08);transition:.18s}
+.card:hover{box-shadow:0 12px 32px rgba(28,28,28,.11)}
+h1{font-size:30px;letter-spacing:-.8px}h2{letter-spacing:-.3px}
+.primary{background:linear-gradient(135deg,var(--red),var(--red2));box-shadow:0 8px 20px rgba(226,55,68,.22)}
+.secondary{background:#eaf1ff;color:#1258c4}.outline{border-color:#dedede}
+input:focus,select:focus,textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(226,55,68,.09)}
+.avatarG{background:linear-gradient(135deg,#1769ff,#60a5fa);box-shadow:0 8px 20px rgba(226,55,68,.2)}
+.token{color:var(--red);letter-spacing:-3px}
+.nav{max-width:680px;background:rgba(255,255,255,.96);backdrop-filter:blur(15px);box-shadow:0 -8px 25px rgba(0,0,0,.06)}
+.nav button.active{color:var(--red);background:#eaf1ff}.nav .navDot{background:var(--red)}
+.splash{background:radial-gradient(circle at 15% 15%,#eaf1ff 0 18%,transparent 40%),radial-gradient(circle at 85% 85%,#eaf1ff 0 15%,transparent 38%),#fff}.splash .logo{font-size:48px}
+.liveBadge{color:#127a3f;background:#e8f9ef}.liveDot{background:#1db954}.liveDot:before{background:#1db954}
 @keyframes livePing{0%{transform:scale(1);opacity:.7}75%,100%{transform:scale(3.4);opacity:0}}
 
-/* TV Mode — large clinic monitor display */
-.tv{min-height:100vh;background:#0b1c2e;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;font-family:Inter,system-ui,sans-serif}
-.tv .logo{font-size:32px;font-weight:900;margin-bottom:6px}.tv .logo span{color:#3b82f6}
-.tv .clinicName{color:#93a9c2;font-size:18px;margin-bottom:40px}
-.tv .nowLabel{color:#93a9c2;font-size:22px;letter-spacing:3px;font-weight:700}
-.tv .nowNum{font-size:220px;font-weight:950;line-height:1;background:linear-gradient(135deg,#3b82f6,#60a5fa);-webkit-background-clip:text;background-clip:text;color:transparent;margin:10px 0 40px}
-.tv .nextRow{display:flex;gap:60px;justify-content:center;margin-top:10px}
-.tv .nextBox{background:#132840;border-radius:20px;padding:20px 40px}
-.tv .nextLabel{color:#93a9c2;font-size:14px;letter-spacing:2px}
-.tv .nextNum{font-size:56px;font-weight:900;color:#fff}
-.tv .tvFooter{margin-top:50px;color:#7691ac;font-size:16px}
-@media(max-width:700px){.tv .nowNum{font-size:120px}.tv .nextNum{font-size:36px}}
+</style>
 
-/* ===== ClinicQ Live Experience ===== */
-.liveCard{position:relative;overflow:hidden}.liveCard::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 20%,rgba(255,255,255,.42) 48%,transparent 72%);transform:translateX(-120%);animation:cardShimmer 3.2s ease-in-out infinite;pointer-events:none}@keyframes cardShimmer{0%,55%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
-.pulseRing{position:relative}.pulseRing::after{content:"";position:absolute;inset:-4px;border:2px solid #3b82f6;border-radius:inherit;opacity:0;animation:ringPulse 1.8s ease-out infinite;pointer-events:none}@keyframes ringPulse{0%{transform:scale(.96);opacity:.55}100%{transform:scale(1.06);opacity:0}}
-.tokenPop{animation:tokenPop .55s cubic-bezier(.2,.8,.2,1)}@keyframes tokenPop{0%{transform:scale(.65);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
-.slideUp{animation:slideUp .45s ease both}@keyframes slideUp{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
-.doctorOnline{display:inline-flex;align-items:center;gap:6px;color:#127a3f;font-size:11px;font-weight:800}.doctorOnline i{width:7px;height:7px;border-radius:50%;background:#1db954;box-shadow:0 0 0 4px #1db95422;animation:onlinePulse 1.6s infinite}@keyframes onlinePulse{50%{box-shadow:0 0 0 7px #1db95400}}
-.progressTrack{height:8px;background:#edf2f7;border-radius:999px;overflow:hidden;margin:8px 0}.progressBar{height:100%;background:linear-gradient(90deg,var(--blue),#60a5fa);border-radius:999px;transition:width .7s ease}
-.nextSlot{border:1px solid #dce8f7;background:linear-gradient(135deg,#f7fbff,#eef5ff);border-radius:15px;padding:13px}.statusHero{background:linear-gradient(135deg,#1769ff,#4f8dfd);color:#fff;border-radius:20px;padding:20px;box-shadow:0 10px 25px #1769ff26;position:relative;overflow:hidden}.statusHero::before{content:"";position:absolute;width:180px;height:180px;border-radius:50%;right:-60px;top:-80px;background:#ffffff18}.statusHero p,.statusHero .small{color:#eaf2ff}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+<style>
+@keyframes clinicQPageIn{from{opacity:.86;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.screen,.splash{animation:clinicQPageIn .22s ease-out}
 </style>
 </head>
 <body>
@@ -89,15 +58,19 @@ const firebaseConfig = {
 
 let fb = { ready:false };
 try{
-  if(firebaseConfig.apiKey!=="REPLACE_ME"){
-    firebase.initializeApp(firebaseConfig);
+  if(firebaseConfig.apiKey && firebaseConfig.apiKey !== "REPLACE_ME"){
+    if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     fb.db = firebase.firestore();
     fb.auth = firebase.auth();
     fb.ready = true;
+    document.getElementById("connbar").classList.add("hidden");
   } else {
     document.getElementById("connbar").classList.remove("hidden");
   }
-}catch(e){ console.error("Firebase init failed:", e); document.getElementById("connbar").classList.remove("hidden"); }
+}catch(e){
+  console.error("Firebase init failed:", e);
+  document.getElementById("connbar").classList.remove("hidden");
+}
 
 /* =========================================================
    2) LOCAL UI STATE (screen navigation only — NOT app data)

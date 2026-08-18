@@ -5,20 +5,21 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ClinicQ — Patient App</title>
 <style>
-:root{--blue:#1769ff;--dark:#17324d;--muted:#64788a;--bg:#f4f8fc;--line:#e2eaf2;--green:#18864b;--orange:#9a6500;--red:#b42318}
+:root{--blue:#1769ff;--blue2:#3b82f6;--dark:#17324d;--muted:#64788a;--bg:#eef4fb;--line:#e2eaf2;--green:#18864b;--orange:#9a6500;--red:#b42318}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--dark)}
-button,input,select,textarea{font:inherit}button{border:0;border-radius:12px;padding:13px 16px;font-weight:750;cursor:pointer}
-.primary{background:var(--blue);color:#fff}.secondary{background:#e9f1ff;color:#1258c4}.outline{background:#fff;border:1px solid var(--line);color:var(--dark)}.danger{background:#ffe9e7;color:var(--red)}
+button,input,select,textarea{font:inherit}button{border:0;border-radius:12px;padding:13px 16px;font-weight:750;cursor:pointer;transition:transform .12s}
+button:active{transform:scale(.98)}
+.primary{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 6px 16px #1769ff33}.secondary{background:#e9f1ff;color:#1258c4}.outline{background:#fff;border:1px solid var(--line);color:var(--dark)}.danger{background:#ffe9e7;color:var(--red)}
 .app{max-width:620px;margin:auto;min-height:100vh;background:#fff;box-shadow:0 0 35px #17324d12}
 header{height:68px;padding:0 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:10}
-.logo{font-size:24px;font-weight:900}.logo span{color:var(--blue)}.screen{padding:22px 20px 105px}
-.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 5px 18px #17324d0a}
+.logo{font-size:24px;font-weight:900;letter-spacing:-.3px}.logo span{color:var(--blue)}.screen{padding:22px 20px 105px}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 6px 20px #17324d0d}
 h1{font-size:28px;line-height:1.15;margin:7px 0 10px}h2{font-size:20px;margin:5px 0 12px}h3{font-size:16px;margin:0 0 8px}p{color:var(--muted);line-height:1.5;margin:7px 0}.small{font-size:12px;color:var(--muted)}.center{text-align:center}
-label{display:block;font-size:13px;font-weight:750;margin:13px 0 6px}input,select,textarea{width:100%;border:1px solid #ccd9e5;border-radius:12px;padding:13px;background:#fff;outline:none}textarea{min-height:85px}
+label{display:block;font-size:13px;font-weight:750;margin:13px 0 6px}input,select,textarea{width:100%;border:1px solid #ccd9e5;border-radius:12px;padding:13px;background:#fff;outline:none;transition:border-color .15s}input:focus,select:focus,textarea:focus{border-color:var(--blue)}textarea{min-height:85px}
 .row{display:flex;gap:10px}.row>*{flex:1}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .tag{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:750;background:#eaf7ef;color:var(--green)}.warning{background:#fff4d5;color:var(--orange)}.dangerTag{background:#ffe9e7;color:var(--red)}
-.kpi{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #eef2f5}.kpi:last-child{border-bottom:0}.kpi b{font-size:18px}
-.token{font-size:72px;line-height:1;font-weight:950;color:var(--blue);text-align:center;margin:8px 0}.tokenLabel{text-align:center;color:var(--muted);font-size:13px}
+.kpi{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #eef2f5}.kpi:last-child{border-bottom:0}.kpi b{font-size:18px}
+.token{font-size:72px;line-height:1;font-weight:950;background:linear-gradient(135deg,var(--blue),var(--blue2));-webkit-background-clip:text;background-clip:text;color:transparent;text-align:center;margin:8px 0}.tokenLabel{text-align:center;color:var(--muted);font-size:13px}
 .avatar{width:56px;height:56px;border-radius:50%;background:#eaf1ff;color:var(--blue);display:grid;place-items:center;font-size:22px;font-weight:900;flex:none}.doctor{display:flex;gap:14px;align-items:flex-start}
 .big{width:100%;margin-top:10px}.muted{background:#f7fafc}.success{padding:13px;border-radius:12px;background:#e9f8ef;color:#176b38}.alert{padding:13px;border-radius:12px;background:#fff4d5;color:#765600}
 .nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:620px;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;z-index:20;padding:7px 4px}.nav button{background:none;color:#62788a;padding:8px 5px;font-size:11px}.nav button.active{color:var(--blue)}
@@ -26,6 +27,25 @@ label{display:block;font-size:13px;font-weight:750;margin:13px 0 6px}input,selec
 .hidden{display:none!important}.back{background:none;padding:0;color:var(--blue);font-weight:750;margin-bottom:14px}
 .connbar{position:fixed;top:0;left:0;right:0;background:#b42318;color:#fff;text-align:center;font-size:12px;padding:6px;z-index:999}
 @media(min-width:700px){.app{min-height:100vh}.screen{padding-left:28px;padding-right:28px}}
+
+/* Live pulsing indicator */
+.liveBadge{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:800;color:#127a3f;background:#e8f9ef;padding:5px 11px;border-radius:999px;letter-spacing:.3px}
+.liveDot{position:relative;width:8px;height:8px;background:#1db954;border-radius:50%;flex:none}
+.liveDot::before{content:'';position:absolute;top:0;left:0;width:8px;height:8px;background:#1db954;border-radius:50%;animation:livePing 1.6s cubic-bezier(0,0,.2,1) infinite}
+@keyframes livePing{0%{transform:scale(1);opacity:.7}75%,100%{transform:scale(3.4);opacity:0}}
+
+/* TV Mode — large clinic monitor display */
+.tv{min-height:100vh;background:#0b1c2e;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;font-family:Inter,system-ui,sans-serif}
+.tv .logo{font-size:32px;font-weight:900;margin-bottom:6px}.tv .logo span{color:#3b82f6}
+.tv .clinicName{color:#93a9c2;font-size:18px;margin-bottom:40px}
+.tv .nowLabel{color:#93a9c2;font-size:22px;letter-spacing:3px;font-weight:700}
+.tv .nowNum{font-size:220px;font-weight:950;line-height:1;background:linear-gradient(135deg,#3b82f6,#60a5fa);-webkit-background-clip:text;background-clip:text;color:transparent;margin:10px 0 40px}
+.tv .nextRow{display:flex;gap:60px;justify-content:center;margin-top:10px}
+.tv .nextBox{background:#132840;border-radius:20px;padding:20px 40px}
+.tv .nextLabel{color:#93a9c2;font-size:14px;letter-spacing:2px}
+.tv .nextNum{font-size:56px;font-weight:900;color:#fff}
+.tv .tvFooter{margin-top:50px;color:#7691ac;font-size:16px}
+@media(max-width:700px){.tv .nowNum{font-size:120px}.tv .nextNum{font-size:36px}}
 </style>
 </head>
 <body>
@@ -327,6 +347,9 @@ function appointmentCard(){
   <div class="kpi"><span>Doctor</span><b>${esc(S.doctor?.name||"")}</b></div>
   <div class="kpi"><span>Status</span><span class="tag ${assigned?(near?'dangerTag':''):'warning'}">${assigned ? (near?'Your turn is near!':'Token Assigned — #'+ap.tokenNumber) : esc(ap.status)}</span></div>
   <div class="kpi"><span>Token</span><b>${ap.tokenNumber ?? "Waiting for assignment"}</b></div>
+  ${assigned ? `
+  <div class="kpi"><span>Current Token (Clinic)</span><span style="display:flex;align-items:center;gap:8px"><span class="liveBadge"><span class="liveDot"></span>LIVE</span><b>#${S.queueLive?.currentToken ?? "–"}</b></span></div>
+  <div class="kpi"><span>Estimated Wait</span><b>${waitMinutes(ap.tokenNumber)} min</b></div>` : ""}
   <button class="secondary big" onclick="setScreen('token')">Track Live Queue</button>
   </div>`;
 }
@@ -356,10 +379,11 @@ function doctorView(){
   <div class="kpi"><span>Clinic</span><b>${esc(d.clinicName)}</b></div>
   <div class="kpi"><span>Hours</span><b>${esc(d.workingHours)}</b></div>
   <div class="kpi"><span>Total Amount</span><b>₹${(d.consultationFee+d.platformFee)}</b></div>
-  <div class="kpi"><span>Current Token</span><b>#${S.queueLive?.currentToken ?? "–"}</b></div>
+  <div class="kpi"><span>Current Token</span><span style="display:flex;align-items:center;gap:8px"><span class="liveBadge"><span class="liveDot"></span>LIVE</span><b>#${S.queueLive?.currentToken ?? "–"}</b></span></div>
   </div>
   <button class="primary big" onclick="tryBookAppointment()">Book Appointment</button>
   <button class="outline big" onclick="emergency()">Emergency Help</button>
+  <button class="outline big" onclick="window.open('?tv='+selectedDoctorId,'_blank')">📺 Launch TV Mode</button>
   </div>${nav('doctors')}`;
 }
 function hasActiveAppointment(){
@@ -457,7 +481,7 @@ function tokenView(){
   ${assigned ? `
   <div class="token">#${ap.tokenNumber}</div><div class="tokenLabel">Your Token</div>
   <div class="card">
-  <div class="kpi"><span>Current Token</span><b>#${q?.currentToken ?? "–"}</b></div>
+  <div class="kpi"><span>Current Token</span><span style="display:flex;align-items:center;gap:8px"><span class="liveBadge"><span class="liveDot"></span>LIVE</span><b>#${q?.currentToken ?? "–"}</b></span></div>
   <div class="kpi"><span>Patients Ahead</span><b>${Math.max(0, ap.tokenNumber-(q?.currentToken||0))}</b></div>
   <div class="kpi"><span>Estimated Wait</span><b>${waitMinutes(ap.tokenNumber)} min</b></div>
   </div>
@@ -473,7 +497,35 @@ function profileView(){
   </div>${nav('profile')}`;
 }
 
-render();
+// TV Mode — standalone display for a clinic monitor. Opened via ?tv=<doctorId>, no login/patient flow needed.
+let tvDoctor=null, tvQueue={currentToken:0,status:"OPEN"};
+function tvView(){
+  return `<div class="tv">
+  <div class="logo">Clinic<span>Q</span> — Live Queue</div>
+  <div class="clinicName">${esc(tvDoctor?.clinicName||"")} • ${esc(tvDoctor?.name||"")}</div>
+  <div class="nowLabel">NOW SERVING</div>
+  <div class="nowNum">#${tvQueue.currentToken}</div>
+  <div class="nextRow"><div class="nextBox"><div class="nextLabel">NEXT</div><div class="nextNum">#${tvQueue.currentToken+1}</div></div></div>
+  <div class="tvFooter">Please wait for your token number to be called.</div>
+  </div>`;
+}
+async function initTvMode(doctorId){
+  document.getElementById("app").innerHTML = tvView();
+  if(!fb.ready) return;
+  const doc = await fb.db.collection("doctors").doc(doctorId).get();
+  tvDoctor = doc.exists ? doc.data() : null;
+  fb.db.collection("queue").doc(doctorId).onSnapshot(d=>{
+    tvQueue = d.exists ? d.data() : {currentToken:0,status:"OPEN"};
+    document.getElementById("app").innerHTML = tvView();
+  });
+}
+
+const tvParam = new URLSearchParams(location.search).get("tv");
+if(tvParam){
+  initTvMode(tvParam);
+} else {
+  render();
+}
 </script>
 </body>
 </html>

@@ -106,11 +106,18 @@ function listenQueue(){
 // LIVE listener on this patient's active appointment (so tokenNumber appears the moment operator assigns it)
 function listenAppointment(appointmentId){
   if(!fb.ready) return;
+  localStorage.setItem("clinicq_last_appointment", appointmentId);
   if(S.unsubAppointment) S.unsubAppointment();
   S.unsubAppointment = fb.db.collection("appointments").doc(appointmentId).onSnapshot(doc=>{
     S.appointment = doc.exists ? {id:doc.id, ...doc.data()} : null;
     render();
   });
+}
+
+// On app start, resume tracking a previously booked appointment if one exists
+function resumeSavedAppointment(){
+  const savedId = localStorage.getItem("clinicq_last_appointment");
+  if(savedId && fb.ready) listenAppointment(savedId);
 }
 
 async function loadPatients(){
@@ -151,6 +158,7 @@ function nav(active){return `<div class="nav">
 async function goHome(){
   await loadDoctor();
   listenQueue();
+  resumeSavedAppointment();
   setScreen("home");
 }
 
@@ -241,13 +249,28 @@ function doctorView(){
   <div class="kpi"><span>Total Amount</span><b>₹${(d.consultationFee+d.platformFee)}</b></div>
   <div class="kpi"><span>Current Token</span><b>#${S.queueLive?.currentToken ?? "–"}</b></div>
   </div>
-  <button class="primary big" onclick="setScreen('book')">Book Appointment</button>
+  <button class="primary big" onclick="tryBookAppointment()">Book Appointment</button>
   <button class="outline big" onclick="emergency()">Emergency Help</button>
   </div>${nav('doctors')}`;
+}
+function hasActiveAppointment(){
+  return S.appointment && S.appointment.doctorId===DOCTOR_ID && !["completed","cancelled","no_show"].includes(S.appointment.status);
+}
+function tryBookAppointment(){
+  if(hasActiveAppointment()){
+    alert("You already have an active appointment with this doctor.\nStatus: "+S.appointment.status+(S.appointment.tokenNumber?"\nToken: #"+S.appointment.tokenNumber:"")+"\n\nGo to 'My Token' to track it.");
+    setScreen('token');
+    return;
+  }
+  setScreen('book');
 }
 function emergency(){ alert("Emergency contact is admin-configured. For real emergencies, contact appropriate emergency medical services."); }
 
 function bookView(){
+  if(hasActiveAppointment()){
+    return `${header("Already Booked")}<div class="screen"><div class="alert">You already have an active appointment.<br>Status: ${esc(S.appointment.status)}${S.appointment.tokenNumber?"<br>Token: #"+S.appointment.tokenNumber:""}</div>
+    <button class="primary big" onclick="setScreen('token')">Go to My Token</button></div>${nav('doctors')}`;
+  }
   const p = selectedPatient();
   if(!p) return `${header()}<div class="screen"><p>Select a patient first.</p><button class="primary" onclick="setScreen('selectPatient')">Select Patient</button></div>`;
   return `${header("Book Appointment")}<div class="screen">

@@ -4,396 +4,3811 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ClinicQ — Doctor's Panel</title>
-<style>
-:root{--blue:#1769ff;--blue2:#3b82f6;--dark:#17324d;--muted:#64788a;--bg:#eef4fb;--line:#e2eaf2;--green:#18864b;--orange:#9a6500;--red:#b42318}
-*{box-sizing:border-box}
-body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:linear-gradient(180deg,#eef4fb 0%,#f7fafd 320px);color:var(--dark)}
-button,input,select{font:inherit}
-button{border:0;border-radius:12px;padding:12px 18px;font-weight:750;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}
-button:hover{transform:translateY(-1px)}button:active{transform:translateY(0)}
-.primary{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 6px 16px #1769ff33}
-.secondary{background:#e9f1ff;color:#1258c4}.outline{background:#fff;border:1px solid var(--line);color:var(--dark)}
-.danger{background:#ffe9e7;color:var(--red)}
-.wrap{max-width:960px;margin:auto;padding:22px 20px 60px}
-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--line)}
-.logo{font-size:25px;font-weight:900;letter-spacing:-.3px}.logo span{color:var(--blue)}
-.headerBtns{display:flex;gap:8px}
-.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;margin:14px 0;box-shadow:0 8px 24px #17324d0d}
-.card h3{margin:0 0 14px;font-size:16px;display:flex;align-items:center;gap:8px}
-.kpi{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #eef2f5}.kpi:last-child{border-bottom:0}.kpi b{font-size:18px}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{padding:10px 8px;text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid var(--line)}
-td{padding:11px 8px;border-bottom:1px solid #eef2f5;text-align:left;vertical-align:middle}
-tbody tr:hover{background:#f7fafd}
-.tag{display:inline-block;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:750;background:#eaf7ef;color:var(--green)}
-.warning{background:#fff4d5;color:var(--orange)}
-.bignum{font-size:52px;font-weight:950;background:linear-gradient(135deg,var(--blue),var(--blue2));-webkit-background-clip:text;background-clip:text;color:transparent}
-.connbar{background:#b42318;color:#fff;text-align:center;font-size:12px;padding:8px;border-radius:10px;margin-bottom:14px}
-.hidden{display:none!important}
-.loginWrap{max-width:380px;margin:80px auto;background:#fff;border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:0 10px 30px #17324d14}
-.loginWrap label{display:block;font-size:13px;font-weight:750;margin:13px 0 6px}
-.loginWrap input{width:100%;border:1px solid #ccd9e5;border-radius:12px;padding:12px;outline:none}
-.loginErr{color:var(--red);font-size:13px;margin-top:10px}
-input,select{border:1px solid #ccd9e5;border-radius:12px;padding:12px;outline:none;transition:border-color .15s}
-input:focus,select:focus{border-color:var(--blue)}
 
-/* Live status indicator — pulsing green dot with expanding ripple */
-.liveBadge{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:800;color:#127a3f;background:#e8f9ef;padding:6px 12px;border-radius:999px;letter-spacing:.3px}
-.liveDot{position:relative;width:9px;height:9px;background:#1db954;border-radius:50%;flex:none}
-.liveDot::before{content:'';position:absolute;top:0;left:0;width:9px;height:9px;background:#1db954;border-radius:50%;animation:livePing 1.6s cubic-bezier(0,0,.2,1) infinite}
-@keyframes livePing{0%{transform:scale(1);opacity:.7}75%,100%{transform:scale(3.2);opacity:0}}
+<style>
+:root{
+  --blue:#2563eb;
+  --blue-dark:#1d4ed8;
+  --blue-soft:#eff6ff;
+
+  --teal:#0f766e;
+  --teal-soft:#ecfdf5;
+
+  --green:#15803d;
+  --green-soft:#ecfdf3;
+
+  --orange:#b45309;
+  --orange-soft:#fff7ed;
+
+  --red:#dc2626;
+  --red-soft:#fef2f2;
+
+  --text:#172033;
+  --muted:#667085;
+  --muted2:#98a2b3;
+
+  --bg:#f6f7f9;
+  --card:#ffffff;
+  --line:#eaecf0;
+
+  --shadow:0 2px 8px rgba(16,24,40,.05);
+  --shadow-lg:0 10px 30px rgba(16,24,40,.10);
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html{
+  scroll-behavior:smooth;
+}
+
+body{
+  margin:0;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Arial,
+    sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+button,
+input,
+select{
+  font:inherit;
+}
+
+button{
+  border:0;
+  border-radius:10px;
+  padding:11px 16px;
+  font-weight:750;
+  cursor:pointer;
+  transition:
+    transform .15s ease,
+    box-shadow .15s ease,
+    background .15s ease;
+}
+
+button:hover{
+  transform:translateY(-1px);
+}
+
+button:active{
+  transform:translateY(0);
+}
+
+button:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+  transform:none;
+}
+
+.primary{
+  background:var(--blue);
+  color:#fff;
+  box-shadow:0 5px 14px rgba(37,99,235,.22);
+}
+
+.primary:hover{
+  background:var(--blue-dark);
+}
+
+.secondary{
+  background:var(--blue-soft);
+  color:var(--blue-dark);
+}
+
+.outline{
+  background:#fff;
+  color:var(--text);
+  border:1px solid var(--line);
+}
+
+.outline:hover{
+  background:#f9fafb;
+}
+
+.danger{
+  background:var(--red-soft);
+  color:var(--red);
+}
+
+.hidden{
+  display:none!important;
+}
+
+.wrap{
+  max-width:1180px;
+  margin:auto;
+  padding:0 22px 80px;
+}
+
+/* HEADER */
+
+header{
+  position:sticky;
+  top:0;
+  z-index:50;
+
+  min-height:72px;
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  margin:0 -22px 22px;
+  padding:0 22px;
+
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(18px);
+
+  border-bottom:1px solid var(--line);
+}
+
+.logo{
+  font-size:25px;
+  font-weight:900;
+  letter-spacing:-.6px;
+}
+
+.logo span{
+  color:var(--blue);
+}
+
+.headerLeft{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.doctorMini{
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+
+.avatar{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:var(--blue-soft);
+  color:var(--blue);
+  font-weight:900;
+}
+
+.doctorMiniName{
+  font-size:13px;
+  font-weight:800;
+}
+
+.doctorMiniSub{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:2px;
+}
+
+.headerBtns{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+/* CONNECTION */
+
+.connbar{
+  background:#fff4ed;
+  color:#9a3412;
+  border:1px solid #fed7aa;
+  text-align:center;
+  font-size:12px;
+  font-weight:700;
+  padding:9px 12px;
+  border-radius:10px;
+  margin:14px 0;
+}
+
+/* CARDS */
+
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:20px;
+  margin:14px 0;
+  box-shadow:var(--shadow);
+}
+
+.card h3{
+  margin:0;
+  font-size:16px;
+  letter-spacing:-.15px;
+}
+
+/* HERO */
+
+.queueHero{
+  display:grid;
+  grid-template-columns:1.5fr 1fr;
+  gap:18px;
+
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(59,130,246,.15),
+      transparent 38%
+    ),
+    linear-gradient(
+      135deg,
+      #ffffff,
+      #f8fbff
+    );
+}
+
+.heroMain{
+  padding:8px 4px;
+}
+
+.heroEyebrow{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  color:var(--muted);
+  font-size:13px;
+  font-weight:700;
+  margin-bottom:8px;
+}
+
+.heroTitle{
+  font-size:30px;
+  font-weight:900;
+  letter-spacing:-1px;
+  margin:0;
+}
+
+.heroSub{
+  color:var(--muted);
+  margin:7px 0 20px;
+  font-size:13px;
+}
+
+.currentTokenBox{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:15px;
+}
+
+.tokenLabel{
+  color:var(--muted);
+  font-size:11px;
+  font-weight:750;
+  letter-spacing:.5px;
+}
+
+.bignum{
+  font-size:60px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:-3px;
+  color:var(--blue);
+}
+
+.nextBtn{
+  min-width:155px;
+}
+
+.queueSide{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:10px;
+  padding:8px;
+}
+
+.queueSideBox{
+  background:#f8fafc;
+  border:1px solid var(--line);
+  border-radius:13px;
+  padding:13px 15px;
+}
+
+.queueSideLabel{
+  color:var(--muted);
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+}
+
+.queueSideValue{
+  font-size:17px;
+  font-weight:850;
+  margin-top:4px;
+}
+
+/* LIVE */
+
+.liveBadge{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+
+  font-size:11px;
+  font-weight:850;
+
+  color:#15803d;
+  background:var(--green-soft);
+
+  padding:6px 10px;
+  border-radius:999px;
+}
+
+.liveDot{
+  position:relative;
+  width:8px;
+  height:8px;
+  background:#22c55e;
+  border-radius:50%;
+}
+
+.liveDot:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:#22c55e;
+  border-radius:50%;
+
+  animation:
+    livePing 1.6s cubic-bezier(0,0,.2,1) infinite;
+}
+
+@keyframes livePing{
+  0%{
+    transform:scale(1);
+    opacity:.7;
+  }
+
+  75%,100%{
+    transform:scale(3.2);
+    opacity:0;
+  }
+}
+
+/* KPI */
+
+.kpiGrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  margin:14px 0;
+}
+
+.kpiCard{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:16px;
+  box-shadow:var(--shadow);
+}
+
+.kpiTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  color:var(--muted);
+  font-size:12px;
+  font-weight:700;
+}
+
+.kpiValue{
+  font-size:26px;
+  font-weight:900;
+  margin-top:7px;
+}
+
+.kpiIcon{
+  width:34px;
+  height:34px;
+
+  display:grid;
+  place-items:center;
+
+  border-radius:10px;
+
+  background:var(--blue-soft);
+}
+
+/* SECTION */
+
+.sectionHead{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+
+  margin-bottom:15px;
+}
+
+.sectionHeadLeft{
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+
+.countBadge{
+  min-width:25px;
+  height:25px;
+
+  display:inline-grid;
+  place-items:center;
+
+  padding:0 8px;
+
+  border-radius:999px;
+
+  background:var(--blue-soft);
+  color:var(--blue-dark);
+
+  font-size:11px;
+  font-weight:850;
+}
+
+/* FORM */
+
+.formGrid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:11px;
+}
+
+.formGrid .full{
+  grid-column:1/-1;
+}
+
+.formLabel{
+  display:block;
+  font-size:12px;
+  font-weight:750;
+  color:#344054;
+  margin:2px 0 6px;
+}
+
+input,
+select{
+  width:100%;
+
+  border:1px solid #d0d5dd;
+  border-radius:10px;
+
+  padding:11px 12px;
+
+  outline:none;
+
+  background:#fff;
+  color:var(--text);
+
+  transition:
+    border-color .15s,
+    box-shadow .15s;
+}
+
+input::placeholder{
+  color:#98a2b3;
+}
+
+input:focus,
+select:focus{
+  border-color:var(--blue);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(37,99,235,.10);
+}
+
+.formBottom{
+  grid-column:1/-1;
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  gap:12px;
+
+  margin-top:2px;
+}
+
+/* PATIENT CARDS */
+
+.patientList{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.patientCard{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:15px;
+  align-items:center;
+
+  padding:15px;
+
+  border:1px solid var(--line);
+  border-radius:13px;
+
+  transition:
+    box-shadow .15s,
+    border-color .15s;
+}
+
+.patientCard:hover{
+  border-color:#d7e2f0;
+  box-shadow:0 4px 16px rgba(16,24,40,.06);
+}
+
+.patientName{
+  font-size:14px;
+  font-weight:850;
+  margin-bottom:5px;
+}
+
+.patientMeta{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:7px;
+
+  color:var(--muted);
+  font-size:12px;
+}
+
+.patientComplaint{
+  color:#475467;
+  font-size:12px;
+  margin-top:8px;
+}
+
+.patientAction{
+  text-align:right;
+}
+
+/* TAGS */
+
+.tag{
+  display:inline-flex;
+  align-items:center;
+
+  padding:5px 9px;
+
+  border-radius:999px;
+
+  font-size:10px;
+  font-weight:800;
+
+  background:var(--green-soft);
+  color:var(--green);
+}
+
+.blueTag{
+  background:var(--blue-soft);
+  color:var(--blue-dark);
+}
+
+.warning{
+  background:var(--orange-soft);
+  color:var(--orange);
+}
+
+.redTag{
+  background:var(--red-soft);
+  color:var(--red);
+}
+
+/* QUEUE */
+
+.queueList{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.queueRow{
+  display:grid;
+  grid-template-columns:70px 1fr auto auto;
+  align-items:center;
+  gap:14px;
+
+  padding:12px 13px;
+
+  border:1px solid var(--line);
+  border-radius:12px;
+}
+
+.queueRow.current{
+  background:var(--blue-soft);
+  border-color:#bfdbfe;
+}
+
+.queueToken{
+  font-size:16px;
+  font-weight:900;
+  color:var(--blue);
+}
+
+.queuePatient{
+  font-size:13px;
+  font-weight:800;
+}
+
+.queuePatient small{
+  display:block;
+  margin-top:3px;
+  color:var(--muted);
+  font-weight:500;
+}
+
+.paymentText{
+  font-size:12px;
+  color:var(--muted);
+}
+
+/* SEARCH */
+
+.searchRow{
+  display:flex;
+  gap:8px;
+}
+
+.searchRow input{
+  flex:1;
+}
+
+/* REFUND */
+
+.refundList{
+  margin-top:15px;
+}
+
+.refundRow{
+  display:grid;
+  grid-template-columns:1fr auto auto;
+  gap:12px;
+  align-items:center;
+
+  padding:12px 0;
+
+  border-bottom:1px solid var(--line);
+}
+
+.refundRow:last-child{
+  border-bottom:0;
+}
+
+.refundName{
+  font-size:13px;
+  font-weight:800;
+}
+
+/* EMPTY */
+
+.emptyState{
+  text-align:center;
+  padding:30px 15px;
+  color:var(--muted);
+}
+
+.emptyIcon{
+  font-size:29px;
+  margin-bottom:8px;
+}
+
+.small{
+  color:var(--muted);
+  font-size:12px;
+}
+
+/* LOGIN */
+
+.loginWrap{
+  max-width:390px;
+  margin:80px auto;
+
+  background:#fff;
+
+  border:1px solid var(--line);
+  border-radius:18px;
+
+  padding:28px;
+
+  box-shadow:var(--shadow-lg);
+}
+
+.loginWrap label{
+  display:block;
+
+  font-size:12px;
+  font-weight:750;
+
+  margin:13px 0 6px;
+
+  color:#344054;
+}
+
+.loginWrap input{
+  width:100%;
+}
+
+.loginErr{
+  color:var(--red);
+  font-size:12px;
+  margin-top:10px;
+}
+
+/* PROFILE */
+
+.profileIntro{
+  text-align:center;
+  margin-bottom:20px;
+}
+
+.profileIntro .logo{
+  margin-bottom:8px;
+}
+
+.profileGrid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+}
+
+.profileGrid .full{
+  grid-column:1/-1;
+}
+
+.profileGrid label{
+  display:block;
+  font-size:12px;
+  font-weight:750;
+  margin-bottom:6px;
+}
+
+/* MODAL */
+
+.modalOverlay{
+  position:fixed;
+  inset:0;
+
+  z-index:100;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  padding:20px;
+
+  background:rgba(15,23,42,.55);
+
+  backdrop-filter:blur(5px);
+}
+
+.modal{
+  width:100%;
+  max-width:430px;
+
+  background:#fff;
+
+  border-radius:18px;
+
+  box-shadow:
+    0 25px 70px rgba(15,23,42,.25);
+
+  overflow:hidden;
+
+  animation:modalIn .18s ease;
+}
+
+@keyframes modalIn{
+  from{
+    opacity:0;
+    transform:translateY(10px) scale(.98);
+  }
+
+  to{
+    opacity:1;
+    transform:none;
+  }
+}
+
+.modalHeader{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  padding:18px 20px;
+
+  border-bottom:1px solid var(--line);
+}
+
+.modalTitle{
+  font-size:17px;
+  font-weight:900;
+}
+
+.closeBtn{
+  width:34px;
+  height:34px;
+
+  padding:0;
+
+  display:grid;
+  place-items:center;
+
+  background:#f2f4f7;
+  color:#475467;
+}
+
+.modalBody{
+  padding:20px;
+}
+
+.modalPatient{
+  background:var(--blue-soft);
+  border:1px solid #dbeafe;
+
+  border-radius:13px;
+
+  padding:14px;
+
+  margin-bottom:15px;
+}
+
+.modalPatientName{
+  font-weight:850;
+}
+
+.modalPatientMeta{
+  color:var(--muted);
+  font-size:12px;
+  margin-top:4px;
+}
+
+.suggestedToken{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
+  margin:10px 0;
+
+  padding:12px 14px;
+
+  border-radius:12px;
+
+  background:#f8fafc;
+
+  border:1px solid var(--line);
+}
+
+.suggestedToken b{
+  color:var(--blue);
+  font-size:18px;
+}
+
+.modalFooter{
+  display:flex;
+  gap:8px;
+
+  padding:15px 20px;
+
+  border-top:1px solid var(--line);
+}
+
+.modalFooter button{
+  flex:1;
+}
+
+/* MOBILE STICKY ACTION */
+
+.mobileAction{
+  display:none;
+}
+
+@media(max-width:760px){
+
+  .wrap{
+    padding:0 13px 95px;
+  }
+
+  header{
+    margin:0 -13px 14px;
+    padding:0 13px;
+
+    min-height:62px;
+  }
+
+  .logo{
+    font-size:21px;
+  }
+
+  .doctorMini{
+    display:none;
+  }
+
+  .headerBtns .outline{
+    display:none;
+  }
+
+  .headerBtns .primary{
+    padding:10px 13px;
+    font-size:12px;
+  }
+
+  .queueHero{
+    grid-template-columns:1fr;
+  }
+
+  .heroTitle{
+    font-size:25px;
+  }
+
+  .bignum{
+    font-size:48px;
+  }
+
+  .currentTokenBox{
+    align-items:center;
+  }
+
+  .nextBtn{
+    min-width:auto;
+  }
+
+  .queueSide{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+
+  .kpiGrid{
+    grid-template-columns:repeat(3,1fr);
+    gap:7px;
+  }
+
+  .kpiCard{
+    padding:12px 10px;
+  }
+
+  .kpiValue{
+    font-size:21px;
+  }
+
+  .kpiIcon{
+    display:none;
+  }
+
+  .formGrid,
+  .profileGrid{
+    grid-template-columns:1fr;
+  }
+
+  .formGrid .full,
+  .profileGrid .full{
+    grid-column:auto;
+  }
+
+  .formBottom{
+    grid-column:auto;
+
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .formBottom button{
+    width:100%;
+  }
+
+  .patientCard{
+    grid-template-columns:1fr;
+  }
+
+  .patientAction{
+    text-align:left;
+  }
+
+  .patientAction button{
+    width:100%;
+  }
+
+  .queueRow{
+    grid-template-columns:55px 1fr auto;
+    gap:9px;
+  }
+
+  .queueRow .paymentText{
+    display:none;
+  }
+
+  .searchRow{
+    flex-direction:column;
+  }
+
+  .searchRow button{
+    width:100%;
+  }
+
+  .refundRow{
+    grid-template-columns:1fr auto;
+  }
+
+  .refundRow > div:nth-child(2){
+    grid-column:1/-1;
+  }
+
+  .mobileAction{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+
+    z-index:80;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    gap:10px;
+
+    padding:10px 13px;
+
+    background:rgba(255,255,255,.96);
+
+    border-top:1px solid var(--line);
+
+    backdrop-filter:blur(15px);
+  }
+
+  .mobileCurrent{
+    font-size:12px;
+    color:var(--muted);
+  }
+
+  .mobileCurrent b{
+    display:block;
+    color:var(--text);
+    font-size:15px;
+  }
+
+  .mobileAction button{
+    flex:1;
+    max-width:210px;
+  }
+
+}
+
+@media(min-width:761px){
+  #app{
+    padding-bottom:20px;
+  }
+}
 </style>
 </head>
+
 <body>
+
 <div class="wrap">
-<div id="connbar" class="connbar hidden">⚠ Firebase not configured yet — see FIREBASE_SETUP_NOTES.md</div>
 
-<div id="loginScreen" class="loginWrap">
-  <div class="logo center" style="text-align:center">Clinic<span>Q</span></div>
-  <p id="loginTitle" style="text-align:center;color:var(--muted)">Doctor / Operator Login</p>
-  <label>Email</label><input id="loginEmail" type="email" placeholder="you@example.com">
-  <label>Password</label><input id="loginPass" type="password">
-  <button id="loginBtn" class="primary" style="width:100%;margin-top:16px" onclick="doLogin()">Login</button>
-  <div id="loginErr" class="loginErr"></div>
-  <p style="text-align:center;margin-top:14px;font-size:13px">
-    <span id="modeLoginText">New here? </span><a href="#" id="modeToggle" onclick="toggleAuthMode();return false;">Create Account</a>
-  </p>
+  <div
+    id="connbar"
+    class="connbar hidden"
+  >
+    ⚠ Firebase not configured yet.
+  </div>
+
+
+  <!-- LOGIN -->
+
+  <div
+    id="loginScreen"
+    class="loginWrap"
+  >
+
+    <div
+      class="logo"
+      style="text-align:center"
+    >
+      Clinic<span>Q</span>
+    </div>
+
+    <p
+      id="loginTitle"
+      style="
+        text-align:center;
+        color:var(--muted);
+        margin-top:7px
+      "
+    >
+      Doctor / Operator Login
+    </p>
+
+    <label>Email</label>
+
+    <input
+      id="loginEmail"
+      type="email"
+      placeholder="doctor@example.com"
+    >
+
+    <label>Password</label>
+
+    <input
+      id="loginPass"
+      type="password"
+      placeholder="••••••••"
+    >
+
+    <button
+      id="loginBtn"
+      class="primary"
+      style="
+        width:100%;
+        margin-top:16px
+      "
+      onclick="doLogin()"
+    >
+      Login
+    </button>
+
+    <div
+      id="loginErr"
+      class="loginErr"
+    ></div>
+
+    <p
+      style="
+        text-align:center;
+        margin-top:14px;
+        font-size:13px
+      "
+    >
+      <span id="modeLoginText">
+        New here?
+      </span>
+
+      <a
+        href="#"
+        id="modeToggle"
+        onclick="
+          toggleAuthMode();
+          return false;
+        "
+        style="
+          color:var(--blue);
+          font-weight:750;
+        "
+      >
+        Create Account
+      </a>
+    </p>
+
+  </div>
+
+
+  <!-- PROFILE -->
+
+  <div
+    id="profileSetupScreen"
+    class="loginWrap hidden"
+    style="max-width:520px"
+  >
+
+    <div class="profileIntro">
+
+      <div class="logo">
+        Clinic<span>Q</span>
+      </div>
+
+      <div
+        style="
+          color:var(--muted);
+          font-size:13px
+        "
+      >
+        Set up your Doctor Profile
+      </div>
+
+    </div>
+
+
+    <div class="profileGrid">
+
+      <div class="full">
+        <label>Doctor Name</label>
+        <input
+          id="pfName"
+          placeholder="Dr. Full Name"
+        >
+      </div>
+
+      <div>
+        <label>Specialty</label>
+        <input
+          id="pfSpecialty"
+          placeholder="e.g. Cardiologist"
+        >
+      </div>
+
+      <div>
+        <label>Experience</label>
+        <input
+          id="pfExp"
+          placeholder="e.g. 10 Years"
+        >
+      </div>
+
+      <div class="full">
+        <label>Qualifications</label>
+        <input
+          id="pfQual"
+          placeholder="MBBS, MD"
+        >
+      </div>
+
+      <div class="full">
+        <label>Clinic Name</label>
+        <input
+          id="pfClinic"
+          placeholder="Clinic name"
+        >
+      </div>
+
+      <div class="full">
+        <label>Clinic Address</label>
+        <input
+          id="pfAddress"
+          placeholder="Clinic address"
+        >
+      </div>
+
+      <div>
+        <label>Working Hours</label>
+        <input
+          id="pfHours"
+          placeholder="10 AM – 2 PM"
+        >
+      </div>
+
+      <div>
+        <label>Consultation Fee (₹)</label>
+        <input
+          id="pfFee"
+          type="number"
+          placeholder="500"
+        >
+      </div>
+
+    </div>
+
+    <p class="small" style="margin:14px 0">
+      Platform and service fees are configured automatically.
+    </p>
+
+    <button
+      class="primary"
+      style="width:100%"
+      onclick="createDoctorProfile()"
+    >
+      Create Profile & Start →
+    </button>
+
+    <div
+      id="profileErr"
+      class="loginErr"
+    ></div>
+
+  </div>
+
+
+  <!-- MAIN -->
+
+  <div
+    id="mainScreen"
+    class="hidden"
+  >
+
+    <header>
+
+      <div class="headerLeft">
+
+        <div class="logo">
+          Clinic<span>Q</span>
+        </div>
+
+        <div class="doctorMini">
+
+          <div
+            id="doctorAvatar"
+            class="avatar"
+          >
+            Dr
+          </div>
+
+          <div>
+            <div
+              id="doctorMiniName"
+              class="doctorMiniName"
+            >
+              Doctor
+            </div>
+
+            <div
+              id="doctorMiniSub"
+              class="doctorMiniSub"
+            >
+              Operator Panel
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="headerBtns">
+
+        <button
+          class="primary"
+          onclick="callNext()"
+        >
+          Call Next →
+        </button>
+
+        <button
+          class="outline"
+          onclick="doLogout()"
+        >
+          Logout
+        </button>
+
+      </div>
+
+    </header>
+
+
+    <div id="app"></div>
+
+  </div>
+
 </div>
 
-<div id="profileSetupScreen" class="loginWrap hidden" style="max-width:480px">
-  <div class="logo center" style="text-align:center">Clinic<span>Q</span></div>
-  <p style="text-align:center;color:var(--muted)">Set up your Doctor Profile</p>
-  <label>Doctor Name</label><input id="pfName" placeholder="Dr. Full Name">
-  <label>Specialty</label><input id="pfSpecialty" placeholder="e.g. Neurologist">
-  <label>Qualifications (comma separated)</label><input id="pfQual" placeholder="MBBS, MD">
-  <label>Experience</label><input id="pfExp" placeholder="e.g. 10 Years Experience">
-  <label>Clinic Name</label><input id="pfClinic" placeholder="Clinic name">
-  <label>Clinic Address</label><input id="pfAddress" placeholder="Clinic address">
-  <label>Working Hours</label><input id="pfHours" placeholder="e.g. 10:00 AM – 2:00 PM">
-  <label>Consultation Fee (₹)</label><input id="pfFee" type="number" placeholder="500">
-  <p class="small">Platform fee and ClinicQ service fee are added automatically — you don't need to set these.</p>
-  <button class="primary" style="width:100%;margin-top:10px" onclick="createDoctorProfile()">Create Profile & Start</button>
-  <div id="profileErr" class="loginErr"></div>
+
+<!-- MOBILE ACTION -->
+
+<div
+  id="mobileAction"
+  class="mobileAction hidden"
+>
+
+  <div class="mobileCurrent">
+
+    Now serving
+
+    <b id="mobileToken">
+      #0
+    </b>
+
+  </div>
+
+  <button
+    class="primary"
+    onclick="callNext()"
+  >
+    Call Next →
+  </button>
+
 </div>
 
-<div id="mainScreen" class="hidden">
-<header><div class="logo">Clinic<span>Q</span> <span style="color:var(--muted);font-weight:600;font-size:15px">— Operator Panel</span></div>
-  <div class="headerBtns"><button class="primary" onclick="callNext()">Call Next Token ▶</button>
-  <button class="outline" onclick="doLogout()">Logout</button></div>
-</header>
-<div id="app"></div>
+
+<!-- TOKEN MODAL -->
+
+<div
+  id="tokenModal"
+  class="modalOverlay hidden"
+  onclick="closeTokenModal(event)"
+>
+
+  <div
+    class="modal"
+    onclick="event.stopPropagation()"
+  >
+
+    <div class="modalHeader">
+
+      <div class="modalTitle">
+        Assign Token
+      </div>
+
+      <button
+        class="closeBtn"
+        onclick="closeTokenModal()"
+      >
+        ✕
+      </button>
+
+    </div>
+
+
+    <div class="modalBody">
+
+      <div class="modalPatient">
+
+        <div
+          id="modalPatientName"
+          class="modalPatientName"
+        >
+          Patient
+        </div>
+
+        <div
+          id="modalPatientMeta"
+          class="modalPatientMeta"
+        >
+          Online booking
+        </div>
+
+      </div>
+
+
+      <div class="suggestedToken">
+
+        <span>
+          Suggested next token
+        </span>
+
+        <b id="modalSuggested">
+          #1
+        </b>
+
+      </div>
+
+
+      <label
+        class="formLabel"
+        style="margin-top:15px"
+      >
+        Token Number
+      </label>
+
+      <input
+        id="modalTokenInput"
+        type="number"
+        min="1"
+        placeholder="Enter token number"
+      >
+
+      <div
+        id="modalTokenError"
+        class="loginErr"
+      ></div>
+
+    </div>
+
+
+    <div class="modalFooter">
+
+      <button
+        class="outline"
+        onclick="closeTokenModal()"
+      >
+        Cancel
+      </button>
+
+      <button
+        class="primary"
+        onclick="confirmTokenAssignment()"
+      >
+        Confirm Token
+      </button>
+
+    </div>
+
+  </div>
+
 </div>
-</div>
+
+
+<!-- FIREBASE -->
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 
+
 <script>
-/* PASTE THE SAME FIREBASE CONFIG AS patient-app.html */
+
+/* =========================================================
+   FIREBASE CONFIG
+========================================================= */
+
 const firebaseConfig = {
-  apiKey: "AIzaSyDsk5VfH0d2UWa_60E_UxQbCCRLDzFsiGA",
-  authDomain: "clinic-a4513.firebaseapp.com",
-  projectId: "clinic-a4513",
-  storageBucket: "clinic-a4513.firebasestorage.app",
-  messagingSenderId: "949075919558",
-  appId: "1:949075919558:web:aad21915e2cea6e5588dc7",
-  measurementId: "G-JZV455CNCV"
+
+  apiKey:
+    "AIzaSyDsk5VfH0d2UWa_60E_UxQbCCRLDzFsiGA",
+
+  authDomain:
+    "clinic-a4513.firebaseapp.com",
+
+  projectId:
+    "clinic-a4513",
+
+  storageBucket:
+    "clinic-a4513.firebasestorage.app",
+
+  messagingSenderId:
+    "949075919558",
+
+  appId:
+    "1:949075919558:web:aad21915e2cea6e5588dc7",
+
+  measurementId:
+    "G-JZV455CNCV"
 };
 
-let fb = { ready:false };
-try{
-  if(firebaseConfig.apiKey!=="REPLACE_ME"){
-    firebase.initializeApp(firebaseConfig);
-    fb.db = firebase.firestore();
-    fb.auth = firebase.auth();
-    fb.ready = true;
-  } else {
-    document.getElementById("connbar").classList.remove("hidden");
-  }
-}catch(e){ console.error(e); document.getElementById("connbar").classList.remove("hidden"); }
 
-let authMode = "login"; // "login" | "signup"
-function toggleAuthMode(){
-  authMode = authMode==="login" ? "signup" : "login";
-  document.getElementById("loginTitle").textContent = authMode==="login" ? "Doctor / Operator Login" : "Create Your Account";
-  document.getElementById("loginBtn").textContent = authMode==="login" ? "Login" : "Create Account";
-  document.getElementById("modeLoginText").textContent = authMode==="login" ? "New here? " : "Already have an account? ";
-  document.getElementById("modeToggle").textContent = authMode==="login" ? "Create Account" : "Login";
-  document.getElementById("loginErr").textContent = "";
+let fb = {
+  ready:false
+};
+
+
+try{
+
+  if(
+    firebaseConfig.apiKey &&
+    firebaseConfig.apiKey !== "REPLACE_ME"
+  ){
+
+    firebase.initializeApp(firebaseConfig);
+
+    fb.db =
+      firebase.firestore();
+
+    fb.auth =
+      firebase.auth();
+
+    fb.ready = true;
+
+  }else{
+
+    document
+      .getElementById("connbar")
+      .classList
+      .remove("hidden");
+
+  }
+
+}catch(e){
+
+  console.error(e);
+
+  document
+    .getElementById("connbar")
+    .classList
+    .remove("hidden");
+
 }
+
+
+/* =========================================================
+   AUTH
+========================================================= */
+
+let authMode = "login";
+
+
+function toggleAuthMode(){
+
+  authMode =
+    authMode === "login"
+      ? "signup"
+      : "login";
+
+
+  document
+    .getElementById("loginTitle")
+    .textContent =
+      authMode === "login"
+        ? "Doctor / Operator Login"
+        : "Create Your Account";
+
+
+  document
+    .getElementById("loginBtn")
+    .textContent =
+      authMode === "login"
+        ? "Login"
+        : "Create Account";
+
+
+  document
+    .getElementById("modeLoginText")
+    .textContent =
+      authMode === "login"
+        ? "New here? "
+        : "Already have an account? ";
+
+
+  document
+    .getElementById("modeToggle")
+    .textContent =
+      authMode === "login"
+        ? "Create Account"
+        : "Login";
+
+
+  document
+    .getElementById("loginErr")
+    .textContent = "";
+
+}
+
 
 async function doLogin(){
-  const email = document.getElementById("loginEmail").value.trim();
-  const pass = document.getElementById("loginPass").value;
-  const errBox = document.getElementById("loginErr");
-  errBox.textContent = "";
-  if(!fb.ready){ errBox.textContent = "Firebase not connected."; return; }
-  try{
-    if(authMode==="login"){
-      await fb.auth.signInWithEmailAndPassword(email, pass);
-    } else {
-      await fb.auth.createUserWithEmailAndPassword(email, pass);
-    }
-  }catch(e){
-    errBox.textContent = (authMode==="login" ? "Login failed: " : "Sign up failed: ") + e.message;
-  }
-}
-function doLogout(){ fb.auth.signOut(); }
 
-// Each operator IS the doctor's account — doctorId is simply their Firebase Auth UID.
-// This removes any need for an admin to manually link operators to doctors.
+  const email =
+    document
+      .getElementById("loginEmail")
+      .value
+      .trim();
+
+  const pass =
+    document
+      .getElementById("loginPass")
+      .value;
+
+  const errBox =
+    document.getElementById("loginErr");
+
+
+  errBox.textContent = "";
+
+
+  if(!email || !pass){
+
+    errBox.textContent =
+      "Please enter email and password.";
+
+    return;
+  }
+
+
+  if(!fb.ready){
+
+    errBox.textContent =
+      "Firebase not connected.";
+
+    return;
+  }
+
+
+  try{
+
+    if(authMode === "login"){
+
+      await fb.auth
+        .signInWithEmailAndPassword(
+          email,
+          pass
+        );
+
+    }else{
+
+      await fb.auth
+        .createUserWithEmailAndPassword(
+          email,
+          pass
+        );
+
+    }
+
+  }catch(e){
+
+    console.error(e);
+
+    errBox.textContent =
+      (
+        authMode === "login"
+          ? "Login failed: "
+          : "Sign up failed: "
+      ) + e.message;
+
+  }
+
+}
+
+
+function doLogout(){
+
+  if(fb.ready){
+
+    fb.auth.signOut();
+
+  }
+
+}
+
+
+/* =========================================================
+   GLOBAL STATE
+========================================================= */
+
 let myDoctorId = null;
 
-async function createDoctorProfile(){
-  const errBox = document.getElementById("profileErr");
-  errBox.textContent = "";
-  const name = document.getElementById("pfName").value.trim();
-  const fee = Number(document.getElementById("pfFee").value);
-  if(!name || !fee){ errBox.textContent = "Doctor name and consultation fee are required."; return; }
+let queueLive = {
+  currentToken:0,
+  status:"OPEN"
+};
 
-  // Sitewide default platform/service fee — developer can override per-doctor later directly in Firestore,
-  // or change the default for future signups by editing config/fees.
-  let defaults = { platformFee:100, serviceFee:20, avgConsultationMinutes:5 };
-  try{
-    const cfg = await fb.db.collection("config").doc("fees").get();
-    if(cfg.exists) defaults = { ...defaults, ...cfg.data() };
-  }catch(e){}
+let pending = [];
 
-  const doctorData = {
-    name, specialty: document.getElementById("pfSpecialty").value.trim(),
-    qualifications: document.getElementById("pfQual").value.split(",").map(s=>s.trim()).filter(Boolean),
-    experience: document.getElementById("pfExp").value.trim(),
-    clinicName: document.getElementById("pfClinic").value.trim(),
-    clinicAddress: document.getElementById("pfAddress").value.trim(),
-    workingHours: document.getElementById("pfHours").value.trim(),
-    consultationFee: fee,
-    platformFee: defaults.platformFee,
-    serviceFee: defaults.serviceFee,
-    avgConsultationMinutes: defaults.avgConsultationMinutes,
-    upiId: "", emergencyNumber: "To be configured by Admin",
-    isActive: true
-  };
-
-  await fb.db.collection("doctors").doc(myDoctorId).set(doctorData);
-  await fb.db.collection("queue").doc(myDoctorId).set({
-    currentToken:0, status:"OPEN", lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-  });
-
-  document.getElementById("profileSetupScreen").classList.add("hidden");
-  document.getElementById("mainScreen").classList.remove("hidden");
-  listenAll();
-}
-
-if(fb.ready){
-  fb.auth.onAuthStateChanged(async user=>{
-    if(user){
-      document.getElementById("loginScreen").classList.add("hidden");
-      myDoctorId = user.uid;
-      const doc = await fb.db.collection("doctors").doc(myDoctorId).get();
-      if(!doc.exists){
-        document.getElementById("profileSetupScreen").classList.remove("hidden");
-      } else {
-        document.getElementById("mainScreen").classList.remove("hidden");
-        listenAll();
-      }
-    } else {
-      document.getElementById("loginScreen").classList.remove("hidden");
-      document.getElementById("profileSetupScreen").classList.add("hidden");
-      document.getElementById("mainScreen").classList.add("hidden");
-    }
-  });
-}
-
-let queueLive = {currentToken:0,status:"OPEN"};
-let pending = [];   // appointments waiting_for_token
-let active = [];    // appointments with a token, not yet completed
-
-function esc(x){return String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
-
-function listenAll(){
-  if(!fb.ready) return;
-
-  // live queue doc
-  fb.db.collection("queue").doc(myDoctorId).onSnapshot(doc=>{
-    queueLive = doc.exists ? doc.data() : {currentToken:0,status:"OPEN"};
-    render();
-  });
-
-  // ClinicQ online bookings waiting for a token — this is the operator's action queue
-  fb.db.collection("appointments")
-    .where("doctorId","==",myDoctorId)
-    .where("status","==","waiting_for_token")
-    .onSnapshot(snap=>{
-      pending = snap.docs.map(d=>({id:d.id, ...d.data()}));
-      render();
-    });
-
-  // Everyone currently in the live queue (token assigned, not completed/cancelled)
-  fb.db.collection("appointments")
-    .where("doctorId","==",myDoctorId)
-    .where("status","in",["waiting","current"])
-    .onSnapshot(snap=>{
-      active = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>a.tokenNumber-b.tokenNumber);
-      render();
-    });
-}
-
-function nextTokenNumber(){
-  const highestActive = active.reduce((m,a)=>Math.max(m,a.tokenNumber||0), 0);
-  return Math.max(queueLive.currentToken+1, highestActive+1);
-}
-
-// CRITICAL: operator decides the token manually — never auto-assigned.
-// This lets the operator account for offline walk-in patients already in the physical queue.
-async function assignToken(appointmentId, patientName){
-  if(!fb.ready) return;
-  const suggested = nextTokenNumber();
-  const input = prompt(`Enter token number for ${patientName}\n(Suggested next: ${suggested} — check your offline queue before confirming)`, suggested);
-  if(input===null) return; // cancelled
-  const token = parseInt(input, 10);
-  if(!token || token<1){ alert("Enter a valid token number."); return; }
-  await fb.db.collection("appointments").doc(appointmentId).update({
-    tokenNumber: token,
-    status: "waiting",
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
-}
-
-async function callNext(){
-  if(!fb.ready){ alert("Connect Firebase first."); return; }
-  const next = queueLive.currentToken + 1;
-  await fb.db.collection("queue").doc(myDoctorId).set({
-    currentToken: next, status:"OPEN", lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-  }, {merge:true});
-  // mark matching appointment(s) as current/completed
-  active.forEach(async a=>{
-    if(a.tokenNumber === next){
-      await fb.db.collection("appointments").doc(a.id).update({status:"current", updatedAt: firebase.firestore.FieldValue.serverTimestamp()});
-    } else if(a.tokenNumber < next){
-      await fb.db.collection("appointments").doc(a.id).update({status:"completed", updatedAt: firebase.firestore.FieldValue.serverTimestamp()});
-    }
-  });
-}
-
-// Add a walk-in (offline) patient directly with a token — operator sets the number themselves
-async function addWalkIn(){
-  const name = document.getElementById("wiName").value.trim();
-  const age = Number(document.getElementById("wiAge").value)||0;
-  const mobile = document.getElementById("wiMobile").value.trim();
-  const complaint = document.getElementById("wiComplaint").value.trim();
-  const method = document.getElementById("wiMethod").value;
-  const amount = Number(document.getElementById("wiAmount").value)||0;
-  const suggested = nextTokenNumber();
-  const input = prompt(`Enter token number for ${name||"this patient"}\n(Suggested next: ${suggested})`, suggested);
-  if(input===null) return;
-  const token = parseInt(input,10);
-  if(!name || !token || token<1){ alert("Enter patient name and a valid token number."); return; }
-  await fb.db.collection("appointments").add({
-    userId:null, patientId:null, patientName:name, patientAge:age, patientMobile:mobile,
-    complaint, doctorId:myDoctorId, paymentType:"cash_at_clinic", paymentMethod:method, amountPaid:amount, paymentStatus:"verified",
-    tokenNumber:token, status:"waiting", source:"walk_in", refunded:false,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
-  document.getElementById("wiName").value=""; document.getElementById("wiAge").value="";
-  document.getElementById("wiMobile").value=""; document.getElementById("wiComplaint").value=""; document.getElementById("wiAmount").value=""; document.getElementById("wiMethod").value="cash";
-}
+let active = [];
 
 let refundResults = [];
-async function searchRefundPatient(){
-  const q = document.getElementById("refundQuery").value.trim().toLowerCase();
-  if(!q){ refundResults=[]; render(); return; }
-  const snap = await fb.db.collection("appointments").where("doctorId","==",myDoctorId).get();
-  refundResults = snap.docs.map(d=>({id:d.id, ...d.data()})).filter(a=>
-    (a.patientName||"").toLowerCase().includes(q) || (a.patientMobile||"").includes(q)
-  );
-  render();
+
+let doctorData = null;
+
+let tokenAppointmentId = null;
+
+
+/* =========================================================
+   PROFILE
+========================================================= */
+
+async function createDoctorProfile(){
+
+  const errBox =
+    document.getElementById("profileErr");
+
+  errBox.textContent = "";
+
+
+  const name =
+    document
+      .getElementById("pfName")
+      .value
+      .trim();
+
+
+  const fee =
+    Number(
+      document
+        .getElementById("pfFee")
+        .value
+    );
+
+
+  if(!name || !fee){
+
+    errBox.textContent =
+      "Doctor name and consultation fee are required.";
+
+    return;
+  }
+
+
+  let defaults = {
+
+    platformFee:100,
+
+    serviceFee:20,
+
+    avgConsultationMinutes:5
+
+  };
+
+
+  try{
+
+    const cfg =
+      await fb.db
+        .collection("config")
+        .doc("fees")
+        .get();
+
+
+    if(cfg.exists){
+
+      defaults = {
+        ...defaults,
+        ...cfg.data()
+      };
+
+    }
+
+  }catch(e){
+
+    console.warn(
+      "Could not load fee config.",
+      e
+    );
+
+  }
+
+
+  doctorData = {
+
+    name,
+
+    specialty:
+      document
+        .getElementById("pfSpecialty")
+        .value
+        .trim(),
+
+    qualifications:
+      document
+        .getElementById("pfQual")
+        .value
+        .split(",")
+        .map(
+          s => s.trim()
+        )
+        .filter(Boolean),
+
+    experience:
+      document
+        .getElementById("pfExp")
+        .value
+        .trim(),
+
+    clinicName:
+      document
+        .getElementById("pfClinic")
+        .value
+        .trim(),
+
+    clinicAddress:
+      document
+        .getElementById("pfAddress")
+        .value
+        .trim(),
+
+    workingHours:
+      document
+        .getElementById("pfHours")
+        .value
+        .trim(),
+
+    consultationFee:fee,
+
+    platformFee:
+      defaults.platformFee,
+
+    serviceFee:
+      defaults.serviceFee,
+
+    avgConsultationMinutes:
+      defaults.avgConsultationMinutes,
+
+    upiId:"",
+
+    emergencyNumber:
+      "To be configured by Admin",
+
+    isActive:true,
+
+    updatedAt:
+      firebase.firestore.FieldValue
+        .serverTimestamp()
+
+  };
+
+
+  try{
+
+    await fb.db
+      .collection("doctors")
+      .doc(myDoctorId)
+      .set(doctorData);
+
+
+    await fb.db
+      .collection("queue")
+      .doc(myDoctorId)
+      .set({
+
+        currentToken:0,
+
+        status:"OPEN",
+
+        lastUpdated:
+          firebase.firestore.FieldValue
+            .serverTimestamp()
+
+      });
+
+
+    document
+      .getElementById("profileSetupScreen")
+      .classList
+      .add("hidden");
+
+
+    document
+      .getElementById("mainScreen")
+      .classList
+      .remove("hidden");
+
+
+    updateDoctorHeader();
+
+    listenAll();
+
+
+  }catch(e){
+
+    console.error(e);
+
+    errBox.textContent =
+      "Could not create profile: " +
+      e.message;
+
+  }
+
 }
 
-async function refundPatient(id, patientName, amountPaid){
-  const input = prompt(`Refund amount for ${patientName}\n(Amount paid: ₹${amountPaid})`, amountPaid);
-  if(input===null) return;
-  const amt = Number(input);
-  if(!amt || amt<=0){ alert("Enter a valid refund amount."); return; }
-  await fb.db.collection("appointments").doc(id).update({
-    refunded:true, refundAmount:amt, refundedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
-  const r = refundResults.find(x=>x.id===id);
-  if(r){ r.refunded=true; r.refundAmount=amt; }
-  render();
+
+/* =========================================================
+   AUTH STATE
+========================================================= */
+
+if(fb.ready){
+
+  fb.auth.onAuthStateChanged(
+    async user => {
+
+      if(user){
+
+        document
+          .getElementById("loginScreen")
+          .classList
+          .add("hidden");
+
+
+        myDoctorId =
+          user.uid;
+
+
+        try{
+
+          const doc =
+            await fb.db
+              .collection("doctors")
+              .doc(myDoctorId)
+              .get();
+
+
+          if(!doc.exists){
+
+            document
+              .getElementById("profileSetupScreen")
+              .classList
+              .remove("hidden");
+
+
+          }else{
+
+            doctorData =
+              doc.data();
+
+
+            document
+              .getElementById("mainScreen")
+              .classList
+              .remove("hidden");
+
+
+            updateDoctorHeader();
+
+            listenAll();
+
+          }
+
+        }catch(e){
+
+          console.error(e);
+
+          document
+            .getElementById("loginErr")
+            .textContent =
+              "Unable to load doctor profile.";
+
+        }
+
+
+      }else{
+
+        myDoctorId = null;
+
+        doctorData = null;
+
+        document
+          .getElementById("loginScreen")
+          .classList
+          .remove("hidden");
+
+
+        document
+          .getElementById("profileSetupScreen")
+          .classList
+          .add("hidden");
+
+
+        document
+          .getElementById("mainScreen")
+          .classList
+          .add("hidden");
+
+
+        document
+          .getElementById("mobileAction")
+          .classList
+          .add("hidden");
+
+      }
+
+    }
+  );
+
 }
+
+
+/* =========================================================
+   DOCTOR HEADER
+========================================================= */
+
+function updateDoctorHeader(){
+
+  if(!doctorData){
+    return;
+  }
+
+
+  const name =
+    doctorData.name ||
+    "Doctor";
+
+
+  document
+    .getElementById("doctorMiniName")
+    .textContent =
+      name;
+
+
+  document
+    .getElementById("doctorMiniSub")
+    .textContent =
+      doctorData.specialty ||
+      "Doctor Panel";
+
+
+  const initials =
+    name
+      .replace("Dr.","")
+      .trim()
+      .split(/\s+/)
+      .slice(0,2)
+      .map(
+        x => x[0]
+      )
+      .join("")
+      .toUpperCase();
+
+
+  document
+    .getElementById("doctorAvatar")
+    .textContent =
+      initials || "DR";
+
+}
+
+
+/* =========================================================
+   FIRESTORE LISTENERS
+========================================================= */
+
+function listenAll(){
+
+  if(!fb.ready || !myDoctorId){
+    return;
+  }
+
+
+  /* Queue */
+
+  fb.db
+    .collection("queue")
+    .doc(myDoctorId)
+    .onSnapshot(doc => {
+
+      queueLive =
+        doc.exists
+          ? doc.data()
+          : {
+              currentToken:0,
+              status:"OPEN"
+            };
+
+
+      updateMobileAction();
+
+      render();
+
+    });
+
+
+  /* Pending online bookings */
+
+  fb.db
+    .collection("appointments")
+    .where(
+      "doctorId",
+      "==",
+      myDoctorId
+    )
+    .where(
+      "status",
+      "==",
+      "waiting_for_token"
+    )
+    .onSnapshot(snap => {
+
+      pending =
+        snap.docs.map(
+          d => ({
+            id:d.id,
+            ...d.data()
+          })
+        );
+
+
+      render();
+
+    });
+
+
+  /* Active queue */
+
+  fb.db
+    .collection("appointments")
+    .where(
+      "doctorId",
+      "==",
+      myDoctorId
+    )
+    .where(
+      "status",
+      "in",
+      [
+        "waiting",
+        "current"
+      ]
+    )
+    .onSnapshot(snap => {
+
+      active =
+        snap.docs
+          .map(
+            d => ({
+              id:d.id,
+              ...d.data()
+            })
+          )
+          .sort(
+            (a,b) =>
+              (a.tokenNumber || 0) -
+              (b.tokenNumber || 0)
+          );
+
+
+      render();
+
+    });
+
+}
+
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function esc(x){
+
+  return String(x ?? "")
+    .replace(
+      /[&<>"']/g,
+      m =>
+        ({
+          "&":"&amp;",
+          "<":"&lt;",
+          ">":"&gt;",
+          "\"":"&quot;",
+          "'":"&#39;"
+        }[m])
+    );
+
+}
+
+
+function nextTokenNumber(){
+
+  const highestActive =
+    active.reduce(
+      (m,a) =>
+        Math.max(
+          m,
+          Number(a.tokenNumber) || 0
+        ),
+      0
+    );
+
+
+  return Math.max(
+    Number(queueLive.currentToken || 0) + 1,
+    highestActive + 1
+  );
+
+}
+
+
+/* =========================================================
+   TOKEN MODAL
+========================================================= */
+
+function openTokenModal(
+  appointmentId,
+  patientName,
+  patientAge
+){
+
+  tokenAppointmentId =
+    appointmentId;
+
+
+  document
+    .getElementById("modalPatientName")
+    .textContent =
+      patientName;
+
+
+  document
+    .getElementById("modalPatientMeta")
+    .textContent =
+      patientAge
+        ? `Online booking • ${patientAge} years`
+        : "Online booking";
+
+
+  const suggested =
+    nextTokenNumber();
+
+
+  document
+    .getElementById("modalSuggested")
+    .textContent =
+      "#" + suggested;
+
+
+  document
+    .getElementById("modalTokenInput")
+    .value =
+      suggested;
+
+
+  document
+    .getElementById("modalTokenError")
+    .textContent = "";
+
+
+  document
+    .getElementById("tokenModal")
+    .classList
+    .remove("hidden");
+
+
+  setTimeout(
+    () =>
+      document
+        .getElementById("modalTokenInput")
+        .focus(),
+    100
+  );
+
+}
+
+
+function closeTokenModal(event){
+
+  if(
+    event &&
+    event.target !== event.currentTarget
+  ){
+
+    return;
+
+  }
+
+
+  tokenAppointmentId = null;
+
+
+  document
+    .getElementById("tokenModal")
+    .classList
+    .add("hidden");
+
+}
+
+
+async function confirmTokenAssignment(){
+
+  if(!tokenAppointmentId){
+    return;
+  }
+
+
+  const input =
+    document
+      .getElementById("modalTokenInput")
+      .value;
+
+
+  const token =
+    parseInt(input,10);
+
+
+  const error =
+    document
+      .getElementById("modalTokenError");
+
+
+  error.textContent = "";
+
+
+  if(!token || token < 1){
+
+    error.textContent =
+      "Please enter a valid token number.";
+
+    return;
+
+  }
+
+
+  const duplicate =
+    active.some(
+      a =>
+        Number(a.tokenNumber) === token
+    );
+
+
+  if(duplicate){
+
+    error.textContent =
+      `Token #${token} is already in the live queue.`;
+
+    return;
+
+  }
+
+
+  try{
+
+    await fb.db
+      .collection("appointments")
+      .doc(tokenAppointmentId)
+      .update({
+
+        tokenNumber:token,
+
+        status:"waiting",
+
+        updatedAt:
+          firebase.firestore.FieldValue
+            .serverTimestamp()
+
+      });
+
+
+    closeTokenModal();
+
+  }catch(e){
+
+    console.error(e);
+
+    error.textContent =
+      "Could not assign token: " +
+      e.message;
+
+  }
+
+}
+
+
+/* =========================================================
+   CALL NEXT
+========================================================= */
+
+async function callNext(){
+
+  if(!fb.ready){
+
+    alert(
+      "Connect Firebase first."
+    );
+
+    return;
+
+  }
+
+
+  const next =
+    Number(queueLive.currentToken || 0) + 1;
+
+
+  try{
+
+    await fb.db
+      .collection("queue")
+      .doc(myDoctorId)
+      .set({
+
+        currentToken:next,
+
+        status:"OPEN",
+
+        lastUpdated:
+          firebase.firestore.FieldValue
+            .serverTimestamp()
+
+      },{
+        merge:true
+      });
+
+
+    const updates =
+      [];
+
+
+    active.forEach(a => {
+
+      if(
+        Number(a.tokenNumber) === next
+      ){
+
+        updates.push(
+          fb.db
+            .collection("appointments")
+            .doc(a.id)
+            .update({
+
+              status:"current",
+
+              updatedAt:
+                firebase.firestore.FieldValue
+                  .serverTimestamp()
+
+            })
+        );
+
+      }else if(
+        Number(a.tokenNumber) < next
+      ){
+
+        updates.push(
+          fb.db
+            .collection("appointments")
+            .doc(a.id)
+            .update({
+
+              status:"completed",
+
+              updatedAt:
+                firebase.firestore.FieldValue
+                  .serverTimestamp()
+
+            })
+        );
+
+      }
+
+    });
+
+
+    await Promise.all(updates);
+
+
+  }catch(e){
+
+    console.error(e);
+
+    alert(
+      "Unable to call next token: " +
+      e.message
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   WALK-IN
+========================================================= */
+
+async function addWalkIn(){
+
+  if(!fb.ready){
+
+    alert(
+      "Firebase not connected."
+    );
+
+    return;
+
+  }
+
+
+  const name =
+    document
+      .getElementById("wiName")
+      .value
+      .trim();
+
+
+  const age =
+    Number(
+      document
+        .getElementById("wiAge")
+        .value
+    ) || 0;
+
+
+  const mobile =
+    document
+      .getElementById("wiMobile")
+      .value
+      .trim();
+
+
+  const complaint =
+    document
+      .getElementById("wiComplaint")
+      .value
+      .trim();
+
+
+  const method =
+    document
+      .getElementById("wiMethod")
+      .value;
+
+
+  const amount =
+    Number(
+      document
+        .getElementById("wiAmount")
+        .value
+    ) || 0;
+
+
+  if(!name){
+
+    alert(
+      "Please enter patient name."
+    );
+
+    return;
+
+  }
+
+
+  const suggested =
+    nextTokenNumber();
+
+
+  const token =
+    await askWalkInToken(
+      name,
+      suggested
+    );
+
+
+  if(token === null){
+    return;
+  }
+
+
+  try{
+
+    await fb.db
+      .collection("appointments")
+      .add({
+
+        userId:null,
+
+        patientId:null,
+
+        patientName:name,
+
+        patientAge:age,
+
+        patientMobile:mobile,
+
+        complaint,
+
+        doctorId:myDoctorId,
+
+        paymentType:
+          "cash_at_clinic",
+
+        paymentMethod:method,
+
+        amountPaid:amount,
+
+        paymentStatus:"verified",
+
+        tokenNumber:token,
+
+        status:"waiting",
+
+        source:"walk_in",
+
+        refunded:false,
+
+        createdAt:
+          firebase.firestore.FieldValue
+            .serverTimestamp(),
+
+        updatedAt:
+          firebase.firestore.FieldValue
+            .serverTimestamp()
+
+      });
+
+
+    document
+      .getElementById("wiName")
+      .value = "";
+
+
+    document
+      .getElementById("wiAge")
+      .value = "";
+
+
+    document
+      .getElementById("wiMobile")
+      .value = "";
+
+
+    document
+      .getElementById("wiComplaint")
+      .value = "";
+
+
+    document
+      .getElementById("wiAmount")
+      .value = "";
+
+
+    document
+      .getElementById("wiMethod")
+      .value = "cash";
+
+
+  }catch(e){
+
+    console.error(e);
+
+    alert(
+      "Unable to add walk-in: " +
+      e.message
+    );
+
+  }
+
+}
+
+
+/*
+  Simple fallback modal-style prompt for walk-ins.
+  Online appointments use the proper token modal above.
+*/
+
+function askWalkInToken(
+  name,
+  suggested
+){
+
+  return new Promise(resolve => {
+
+    const token =
+      window.prompt(
+        `Token number for ${name}\n\nSuggested: ${suggested}`,
+        suggested
+      );
+
+
+    if(token === null){
+
+      resolve(null);
+
+      return;
+
+    }
+
+
+    const parsed =
+      parseInt(token,10);
+
+
+    if(
+      !parsed ||
+      parsed < 1
+    ){
+
+      alert(
+        "Enter a valid token number."
+      );
+
+      resolve(null);
+
+      return;
+
+    }
+
+
+    const duplicate =
+      active.some(
+        a =>
+          Number(a.tokenNumber) === parsed
+      );
+
+
+    if(duplicate){
+
+      alert(
+        `Token #${parsed} is already in use.`
+      );
+
+      resolve(null);
+
+      return;
+
+    }
+
+
+    resolve(parsed);
+
+  });
+
+}
+
+
+/* =========================================================
+   REFUNDS
+========================================================= */
+
+async function searchRefundPatient(){
+
+  const q =
+    document
+      .getElementById("refundQuery")
+      .value
+      .trim()
+      .toLowerCase();
+
+
+  if(!q){
+
+    refundResults = [];
+
+    render();
+
+    return;
+
+  }
+
+
+  try{
+
+    const snap =
+      await fb.db
+        .collection("appointments")
+        .where(
+          "doctorId",
+          "==",
+          myDoctorId
+        )
+        .get();
+
+
+    refundResults =
+      snap.docs
+        .map(
+          d => ({
+            id:d.id,
+            ...d.data()
+          })
+        )
+        .filter(a => {
+
+          return (
+
+            (a.patientName || "")
+              .toLowerCase()
+              .includes(q)
+
+            ||
+
+            (a.patientMobile || "")
+              .includes(q)
+
+          );
+
+        });
+
+
+    render();
+
+
+  }catch(e){
+
+    console.error(e);
+
+    alert(
+      "Could not search patients: " +
+      e.message
+    );
+
+  }
+
+}
+
+
+async function refundPatient(
+  id,
+  patientName,
+  amountPaid
+){
+
+  const input =
+    prompt(
+      `Refund amount for ${patientName}\n\nAmount paid: ₹${amountPaid}`,
+      amountPaid
+    );
+
+
+  if(input === null){
+    return;
+  }
+
+
+  const amt =
+    Number(input);
+
+
+  if(
+    !amt ||
+    amt <= 0
+  ){
+
+    alert(
+      "Enter a valid refund amount."
+    );
+
+    return;
+
+  }
+
+
+  try{
+
+    await fb.db
+      .collection("appointments")
+      .doc(id)
+      .update({
+
+        refunded:true,
+
+        refundAmount:amt,
+
+        refundedAt:
+          firebase.firestore.FieldValue
+            .serverTimestamp(),
+
+        updatedAt:
+          firebase.firestore.FieldValue
+            .serverTimestamp()
+
+      });
+
+
+    const r =
+      refundResults.find(
+        x => x.id === id
+      );
+
+
+    if(r){
+
+      r.refunded = true;
+
+      r.refundAmount = amt;
+
+    }
+
+
+    render();
+
+
+  }catch(e){
+
+    console.error(e);
+
+    alert(
+      "Refund failed: " +
+      e.message
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+function updateMobileAction(){
+
+  const bar =
+    document.getElementById(
+      "mobileAction"
+    );
+
+
+  if(
+    !myDoctorId ||
+    document
+      .getElementById("mainScreen")
+      .classList
+      .contains("hidden")
+  ){
+
+    bar.classList.add("hidden");
+
+    return;
+
+  }
+
+
+  bar.classList.remove("hidden");
+
+
+  document
+    .getElementById("mobileToken")
+    .textContent =
+      "#" +
+      (queueLive.currentToken || 0);
+
+}
+
+
+/* =========================================================
+   RENDER
+========================================================= */
 
 function render(){
-  document.getElementById("app").innerHTML = `
-  <div class="card">
-    <div class="kpi"><span>Current Token</span><span class="bignum">#${queueLive.currentToken}</span></div>
-    <div class="kpi"><span>Queue Status</span>
-      <span style="display:flex;align-items:center;gap:10px">
-        <span class="liveBadge"><span class="liveDot"></span>LIVE</span>
-        <span class="tag">${esc(queueLive.status)}</span>
-      </span>
+
+  const waitingCount =
+    active.filter(
+      a => a.status === "waiting"
+    ).length;
+
+
+  const currentPatient =
+    active.find(
+      a => a.status === "current"
+    );
+
+
+  document
+    .getElementById("app")
+    .innerHTML = `
+
+
+    <!-- QUEUE HERO -->
+
+    <div class="card queueHero">
+
+      <div class="heroMain">
+
+        <div class="heroEyebrow">
+
+          <span class="liveBadge">
+            <span class="liveDot"></span>
+            LIVE QUEUE
+          </span>
+
+          <span>
+            Doctor's consultation queue
+          </span>
+
+        </div>
+
+
+        <h1 class="heroTitle">
+          Token #${queueLive.currentToken || 0}
+        </h1>
+
+
+        <p class="heroSub">
+
+          ${
+            currentPatient
+
+              ? `
+                Currently consulting
+                <b>
+                  ${esc(
+                    currentPatient.patientName
+                  )}
+                </b>
+              `
+
+              : `
+                No patient is currently being consulted
+              `
+          }
+
+        </p>
+
+
+        <div class="currentTokenBox">
+
+          <div>
+
+            <div class="tokenLabel">
+              NOW SERVING
+            </div>
+
+            <div class="bignum">
+              #${queueLive.currentToken || 0}
+            </div>
+
+          </div>
+
+
+          <button
+            class="primary nextBtn"
+            onclick="callNext()"
+          >
+            Call Next →
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div class="queueSide">
+
+        <div class="queueSideBox">
+
+          <div class="queueSideLabel">
+            Queue Status
+          </div>
+
+          <div class="queueSideValue">
+            ${esc(
+              queueLive.status || "OPEN"
+            )}
+          </div>
+
+        </div>
+
+
+        <div class="queueSideBox">
+
+          <div class="queueSideLabel">
+            Next Suggested Token
+          </div>
+
+          <div class="queueSideValue">
+            #${nextTokenNumber()}
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
-  </div>
 
-  <div class="card">
-    <h3>Add Walk-in Patient</h3>
-    <input id="wiName" placeholder="Patient name" style="margin-bottom:8px">
-    <input id="wiAge" type="number" placeholder="Age" style="margin-bottom:8px">
-    <input id="wiMobile" placeholder="Mobile number (so they can track token)" style="margin-bottom:8px">
-    <input id="wiComplaint" placeholder="Complaint" style="margin-bottom:10px">
-    <label style="font-size:13px;font-weight:750;display:block;margin-bottom:6px">Payment Method</label>
-    <select id="wiMethod" style="width:100%;border:1px solid #ccd9e5;border-radius:12px;padding:12px;margin-bottom:8px">
-      <option value="cash">Cash</option>
-      <option value="upi">UPI</option>
-    </select>
-    <input id="wiAmount" type="number" placeholder="Amount Paid (₹)" style="margin-bottom:10px">
-    <button class="primary" onclick="addWalkIn()">Add & Assign Token</button>
-  </div>
 
-  <div class="card">
-    <h3>Online Booking Requests — Waiting for Token (${pending.length})</h3>
-    <table><thead><tr><th>Patient</th><th>Age</th><th>Source</th><th>Complaint</th><th>Payment</th><th></th></tr></thead><tbody>
-    ${pending.map(p=>`<tr>
-      <td>${esc(p.patientName)}</td><td>${p.patientAge}</td>
-      <td><span class="tag">Online</span></td>
-      <td>${esc(p.complaint||"-")}</td>
-      <td>${p.paymentType==="online"?"₹"+p.amountPaid+" Online":"₹"+p.amountPaid+" Service Fee (Cash consult)"}</td>
-      <td><button class="primary" onclick="assignToken('${p.id}', '${esc(p.patientName)}')">Assign Token (suggested #${nextTokenNumber()})</button></td>
-    </tr>`).join("") || `<tr><td colspan="6" class="small">No pending requests.</td></tr>`}
-    </tbody></table>
-  </div>
+    <!-- KPI -->
 
-  <div class="card">
-    <h3>Live Queue (${active.length})</h3>
-    <table><thead><tr><th>Token</th><th>Patient</th><th>Source</th><th>Payment</th><th>Status</th></tr></thead><tbody>
-    ${active.map(a=>`<tr>
-      <td><b>#${a.tokenNumber}</b></td>
-      <td>${esc(a.patientName)}${a.patientAge?", "+a.patientAge:""}</td>
-      <td><span class="tag ${a.source==='walk_in'?'warning':''}">${a.source==='walk_in'?'Offline':'Online'}</span></td>
-      <td>${a.refunded ? `<span class="tag" style="background:#ffe9e7;color:#b42318">Refunded ₹${a.refundAmount}</span>` : (a.amountPaid ? `₹${a.amountPaid}${a.paymentMethod?' ('+esc(a.paymentMethod.toUpperCase())+')':''}` : '-')}</td>
-      <td><span class="tag ${a.status==='current'?'':'warning'}">${esc(a.status)}</span></td>
-    </tr>`).join("") || `<tr><td colspan="5" class="small">Queue empty.</td></tr>`}
-    </tbody></table>
-  </div>
+    <div class="kpiGrid">
 
-  <div class="card">
-    <h3>Refund a Patient</h3>
-    <p class="small">Search across all patients (active or completed) to process a refund.</p>
-    <input id="refundQuery" placeholder="Search by patient name or mobile number" style="margin-bottom:8px" onkeydown="if(event.key==='Enter')searchRefundPatient()">
-    <button class="outline" onclick="searchRefundPatient()">Search</button>
-    ${refundResults.length ? `<table style="margin-top:12px"><thead><tr><th>Patient</th><th>Token</th><th>Amount Paid</th><th></th></tr></thead><tbody>
-    ${refundResults.map(a=>`<tr>
-      <td>${esc(a.patientName)}${a.patientMobile?" ("+esc(a.patientMobile)+")":""}</td>
-      <td>${a.tokenNumber?"#"+a.tokenNumber:"-"}</td>
-      <td>₹${a.amountPaid||0}</td>
-      <td>${a.refunded ? `<span class="tag" style="background:#ffe9e7;color:#b42318">Refunded ₹${a.refundAmount}</span>` : (a.amountPaid>0 ? `<button class="danger" onclick="refundPatient('${a.id}','${esc(a.patientName)}',${a.amountPaid})">Refund</button>` : `<span class="small">No payment recorded</span>`)}</td>
-    </tr>`).join("")}</tbody></table>` : ""}
-  </div>
+      <div class="kpiCard">
+
+        <div class="kpiTop">
+
+          Waiting
+
+          <span class="kpiIcon">
+            👥
+          </span>
+
+        </div>
+
+        <div class="kpiValue">
+          ${waitingCount}
+        </div>
+
+      </div>
+
+
+      <div class="kpiCard">
+
+        <div class="kpiTop">
+
+          Current
+
+          <span class="kpiIcon">
+            🩺
+          </span>
+
+        </div>
+
+        <div class="kpiValue">
+          #${queueLive.currentToken || 0}
+        </div>
+
+      </div>
+
+
+      <div class="kpiCard">
+
+        <div class="kpiTop">
+
+          Requests
+
+          <span class="kpiIcon">
+            📋
+          </span>
+
+        </div>
+
+        <div class="kpiValue">
+          ${pending.length}
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- WALK-IN -->
+
+    <div class="card">
+
+      <div class="sectionHead">
+
+        <div class="sectionHeadLeft">
+
+          <h3>
+            ➕ Add Walk-in Patient
+          </h3>
+
+          <span class="tag warning">
+            OFFLINE
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <div class="formGrid">
+
+        <div>
+
+          <label class="formLabel">
+            Patient Name
+          </label>
+
+          <input
+            id="wiName"
+            placeholder="Enter patient name"
+          >
+
+        </div>
+
+
+        <div>
+
+          <label class="formLabel">
+            Age
+          </label>
+
+          <input
+            id="wiAge"
+            type="number"
+            placeholder="Age"
+          >
+
+        </div>
+
+
+        <div>
+
+          <label class="formLabel">
+            Mobile Number
+          </label>
+
+          <input
+            id="wiMobile"
+            placeholder="10-digit mobile number"
+          >
+
+        </div>
+
+
+        <div>
+
+          <label class="formLabel">
+            Payment Method
+          </label>
+
+          <select id="wiMethod">
+
+            <option value="cash">
+              Cash
+            </option>
+
+            <option value="upi">
+              UPI
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="full">
+
+          <label class="formLabel">
+            Complaint / Reason for Visit
+          </label>
+
+          <input
+            id="wiComplaint"
+            placeholder="e.g. Fever, headache, follow-up..."
+          >
+
+        </div>
+
+
+        <div>
+
+          <label class="formLabel">
+            Amount Paid
+          </label>
+
+          <input
+            id="wiAmount"
+            type="number"
+            placeholder="₹ Amount"
+          >
+
+        </div>
+
+
+        <div class="formBottom">
+
+          <span class="small">
+            Suggested token:
+            <b>
+              #${nextTokenNumber()}
+            </b>
+          </span>
+
+          <button
+            class="primary"
+            onclick="addWalkIn()"
+          >
+            Add Patient →
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ONLINE REQUESTS -->
+
+    <div class="card">
+
+      <div class="sectionHead">
+
+        <div class="sectionHeadLeft">
+
+          <h3>
+            Online Booking Requests
+          </h3>
+
+          <span class="countBadge">
+            ${pending.length}
+          </span>
+
+        </div>
+
+      </div>
+
+
+      ${
+        pending.length
+
+        ?
+
+        `
+        <div class="patientList">
+
+          ${pending.map(p => `
+
+            <div class="patientCard">
+
+              <div>
+
+                <div class="patientName">
+                  ${esc(p.patientName)}
+                </div>
+
+
+                <div class="patientMeta">
+
+                  <span>
+                    ${
+                      p.patientAge
+                        ? p.patientAge + " yrs"
+                        : "Age N/A"
+                    }
+                  </span>
+
+                  <span>•</span>
+
+                  <span class="tag blueTag">
+                    ONLINE
+                  </span>
+
+                  <span>•</span>
+
+                  <span>
+                    ₹${p.amountPaid || 0}
+                  </span>
+
+                </div>
+
+
+                <div class="patientComplaint">
+
+                  ${
+                    p.complaint
+                      ? esc(p.complaint)
+                      : "No complaint provided"
+                  }
+
+                </div>
+
+              </div>
+
+
+              <div class="patientAction">
+
+                <button
+                  class="primary"
+                  onclick="
+                    openTokenModal(
+                      '${p.id}',
+                      '${esc(p.patientName)}',
+                      '${p.patientAge || ""}'
+                    )
+                  "
+                >
+                  Assign #${nextTokenNumber()}
+                </button>
+
+              </div>
+
+            </div>
+
+          `).join("")}
+
+        </div>
+        `
+
+        :
+
+        `
+        <div class="emptyState">
+
+          <div class="emptyIcon">
+            📋
+          </div>
+
+          <div>
+            No online booking requests
+          </div>
+
+          <div class="small">
+            New bookings will appear here automatically.
+          </div>
+
+        </div>
+        `
+      }
+
+    </div>
+
+
+    <!-- LIVE QUEUE -->
+
+    <div class="card">
+
+      <div class="sectionHead">
+
+        <div class="sectionHeadLeft">
+
+          <h3>
+            Live Queue
+          </h3>
+
+          <span class="countBadge">
+            ${active.length}
+          </span>
+
+        </div>
+
+
+        <span class="liveBadge">
+
+          <span class="liveDot"></span>
+
+          LIVE
+
+        </span>
+
+      </div>
+
+
+      ${
+        active.length
+
+        ?
+
+        `
+        <div class="queueList">
+
+          ${active.map(a => `
+
+            <div
+              class="queueRow ${
+                a.status === "current"
+                  ? "current"
+                  : ""
+              }"
+            >
+
+              <div class="queueToken">
+                #${a.tokenNumber}
+              </div>
+
+
+              <div>
+
+                <div class="queuePatient">
+
+                  ${esc(a.patientName)}
+
+                  ${
+                    a.status === "current"
+                      ? `
+                        <span
+                          class="tag"
+                          style="margin-left:5px"
+                        >
+                          NOW
+                        </span>
+                      `
+                      : ""
+                  }
+
+                </div>
+
+
+                <small>
+
+                  ${
+                    a.patientAge
+                      ? a.patientAge + " years"
+                      : "Age not provided"
+                  }
+
+                </small>
+
+              </div>
+
+
+              <div>
+
+                <span
+                  class="tag ${
+                    a.source === "walk_in"
+                      ? "warning"
+                      : "blueTag"
+                  }"
+                >
+
+                  ${
+                    a.source === "walk_in"
+                      ? "WALK-IN"
+                      : "ONLINE"
+                  }
+
+                </span>
+
+              </div>
+
+
+              <div class="paymentText">
+
+                ${
+                  a.refunded
+
+                    ?
+
+                    `
+                    <span class="tag redTag">
+                      Refunded ₹${a.refundAmount}
+                    </span>
+                    `
+
+                    :
+
+                    a.amountPaid
+
+                    ?
+
+                    `
+                    ₹${a.amountPaid}
+
+                    ${
+                      a.paymentMethod
+                        ? `
+                          (${esc(
+                            a.paymentMethod
+                              .toUpperCase()
+                          )})
+                        `
+                        : ""
+                    }
+                    `
+
+                    :
+
+                    "-"
+                }
+
+              </div>
+
+            </div>
+
+          `).join("")}
+
+        </div>
+        `
+
+        :
+
+        `
+        <div class="emptyState">
+
+          <div class="emptyIcon">
+            🎫
+          </div>
+
+          <div>
+            Queue is empty
+          </div>
+
+          <div class="small">
+            Add a walk-in or assign a token to an online booking.
+          </div>
+
+        </div>
+        `
+      }
+
+    </div>
+
+
+    <!-- REFUND -->
+
+    <div class="card">
+
+      <div class="sectionHead">
+
+        <h3>
+          💰 Refund Patient
+        </h3>
+
+      </div>
+
+
+      <p class="small">
+        Search a patient by name or mobile number.
+      </p>
+
+
+      <div class="searchRow">
+
+        <input
+          id="refundQuery"
+          placeholder="Search patient..."
+          onkeydown="
+            if(event.key === 'Enter')
+              searchRefundPatient()
+          "
+        >
+
+
+        <button
+          class="outline"
+          onclick="searchRefundPatient()"
+        >
+          Search
+        </button>
+
+      </div>
+
+
+      ${
+        refundResults.length
+
+        ?
+
+        `
+        <div class="refundList">
+
+          ${refundResults.map(a => `
+
+            <div class="refundRow">
+
+              <div>
+
+                <div class="refundName">
+                  ${esc(a.patientName)}
+                </div>
+
+                <div class="small">
+
+                  ${
+                    a.patientMobile
+                      ? esc(a.patientMobile)
+                      : "No mobile"
+                  }
+
+                  ${
+                    a.tokenNumber
+                      ? ` • Token #${a.tokenNumber}`
+                      : ""
+                  }
+
+                </div>
+
+              </div>
+
+
+              <div>
+                ₹${a.amountPaid || 0}
+              </div>
+
+
+              <div>
+
+                ${
+                  a.refunded
+
+                    ?
+
+                    `
+                    <span class="tag redTag">
+                      Refunded ₹${a.refundAmount}
+                    </span>
+                    `
+
+                    :
+
+                    a.amountPaid > 0
+
+                    ?
+
+                    `
+                    <button
+                      class="danger"
+                      onclick="
+                        refundPatient(
+                          '${a.id}',
+                          '${esc(a.patientName)}',
+                          ${a.amountPaid}
+                        )
+                      "
+                    >
+                      Refund
+                    </button>
+                    `
+
+                    :
+
+                    `
+                    <span class="small">
+                      No payment
+                    </span>
+                    `
+                }
+
+              </div>
+
+            </div>
+
+          `).join("")}
+
+        </div>
+        `
+
+        :
+
+        ""
+      }
+
+    </div>
+
   `;
+
+
+  updateMobileAction();
+
 }
 
+
+/* =========================================================
+   INITIAL
+========================================================= */
+
 render();
+
 </script>
+
 </body>
-</html>
+                              </html>

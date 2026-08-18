@@ -20,9 +20,15 @@ label{display:block;font-size:13px;font-weight:750;margin:13px 0 6px}input,selec
 .tag{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:750;background:#eaf7ef;color:var(--green)}.warning{background:#fff4d5;color:var(--orange)}.dangerTag{background:#ffe9e7;color:var(--red)}
 .kpi{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #eef2f5}.kpi:last-child{border-bottom:0}.kpi b{font-size:18px}
 .token{font-size:72px;line-height:1;font-weight:950;background:linear-gradient(135deg,var(--blue),var(--blue2));-webkit-background-clip:text;background-clip:text;color:transparent;text-align:center;margin:8px 0}.tokenLabel{text-align:center;color:var(--muted);font-size:13px}
-.avatar{width:56px;height:56px;border-radius:50%;background:#eaf1ff;color:var(--blue);display:grid;place-items:center;font-size:22px;font-weight:900;flex:none}.doctor{display:flex;gap:14px;align-items:flex-start}
+.avatar{width:56px;height:56px;border-radius:50%;background:#eaf1ff;color:var(--blue);display:grid;place-items:center;font-size:22px;font-weight:900;flex:none}
+.avatarG{width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,var(--blue),#60a5fa);color:#fff;display:grid;place-items:center;font-size:18px;font-weight:800;flex:none;letter-spacing:.5px}
+.doctor{display:flex;gap:14px;align-items:flex-start}
+.card.doctor{transition:box-shadow .15s,transform .15s}.card.doctor:active{transform:scale(.985)}
 .big{width:100%;margin-top:10px}.muted{background:#f7fafc}.success{padding:13px;border-radius:12px;background:#e9f8ef;color:#176b38}.alert{padding:13px;border-radius:12px;background:#fff4d5;color:#765600}
-.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:620px;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;z-index:20;padding:7px 4px}.nav button{background:none;color:#62788a;padding:8px 5px;font-size:11px}.nav button.active{color:var(--blue)}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:620px;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;z-index:20;padding:8px 6px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -6px 20px #17324d0d}
+.nav button{background:none;border:none;color:#96a7b8;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 14px;border-radius:14px;font-size:10.5px;font-weight:750;transition:background .15s,color .15s}
+.nav button.active{color:var(--blue);background:#eaf1ff}
+.nav .navDot{position:absolute;top:4px;right:16px;width:8px;height:8px;background:#e0433d;border-radius:50%;border:2px solid #fff}
 .splash{min-height:100vh;display:grid;place-items:center;text-align:center;padding:30px}.splash .logo{font-size:42px}.splash p{max-width:400px;margin:10px auto}
 .hidden{display:none!important}.back{background:none;padding:0;color:var(--blue);font-weight:750;margin-bottom:14px}
 .connbar{position:fixed;top:0;left:0;right:0;background:#b42318;color:#fff;text-align:center;font-size:12px;padding:6px;z-index:999}
@@ -204,14 +210,26 @@ async function createAppointment({patient, paymentType, amountPaid}){
 /* =========================================================
    4) SCREENS
    ========================================================= */
-function header(title=""){return `<header><div class="logo">Clinic<span>Q</span></div><div class="small">${esc(title)}</div></header>`}
+function header(title=""){return `<header><div class="logo">Clinic<span>Q</span></div>
+<div style="display:flex;align-items:center;gap:10px">
+${title?`<div class="small" style="font-weight:700">${esc(title)}</div>`:""}
+<button onclick="setScreen('profile')" style="background:none;padding:8px;color:var(--dark)" aria-label="Profile menu">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg>
+</button></div></header>`}
+
+const ICONS = {
+  home:'<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>',
+  search:'<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>',
+  ticket:'<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 012-2h14a2 2 0 012 2v2a2 2 0 000 4v2a2 2 0 01-2 2H5a2 2 0 01-2-2v-2a2 2 0 000-4V8z"/><path d="M13 6v12" stroke-dasharray="2 3"/></svg>'
+};
 function nav(active){
   const near = S.appointment && S.appointment.tokenNumber && S.queueLive && (S.appointment.tokenNumber - S.queueLive.currentToken) <= 2;
+  const item=(key,icon,label,onclick)=>`<button class="${active===key?'active':''}" style="position:relative" onclick="${onclick}">${icon}<span>${label}</span>${key==='token'&&near?'<span class="navDot"></span>':''}</button>`;
   return `<div class="nav">
-<button class="${active==='home'?'active':''}" onclick="goHome()">⌂<br>Home</button>
-<button class="${active==='doctors'?'active':''}" onclick="goDoctorsList()">⌕<br>Find Doctor</button>
-<button class="${active==='token'?'active':''}" style="position:relative" onclick="setScreen('token')">#<br>My Token${near?'<span style="position:absolute;top:4px;right:24%;width:9px;height:9px;background:#e0433d;border-radius:50%"></span>':''}</button>
-<button class="${active==='profile'?'active':''}" onclick="setScreen('profile')">●<br>Profile</button></div>`;
+  ${item('home',ICONS.home,'Home',"goHome()")}
+  ${item('doctors',ICONS.search,'Find Doctor',"goDoctorsList()")}
+  ${item('token',ICONS.ticket,'My Token',"setScreen('token')")}
+  </div>`;
 }
 
 async function goHome(){
@@ -354,15 +372,16 @@ function appointmentCard(){
   </div>`;
 }
 
+function initials(name){ return (name||"").replace(/^Dr\.?\s*/i,"").split(" ").filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase(); }
 function doctorsListView(){
   const q = (S.doctorSearch||"").toLowerCase();
   const filtered = S.doctorsList.filter(d=>!q || (d.name||"").toLowerCase().includes(q) || (d.specialty||"").toLowerCase().includes(q));
   return `${header("Find Doctor")}<div class="screen">
   <input placeholder="Search by doctor name or specialty" value="${esc(S.doctorSearch||"")}" oninput="S.doctorSearch=this.value;render()" style="margin-bottom:14px">
   ${filtered.map(d=>`<div class="card doctor" style="cursor:pointer" onclick="chooseDoctor('${d.id}')">
-  <div class="avatar">👨‍⚕️</div>
-  <div><h3>${esc(d.name)}</h3><p>${esc(d.specialty)}</p>
-  <p class="small">${esc(d.clinicName)} • Total ₹${(d.consultationFee+d.platformFee)}</p></div></div>`).join("") || `<p>No doctors match your search.</p>`}
+  <div class="avatarG">${initials(d.name)}</div>
+  <div style="flex:1"><h3 style="margin-bottom:2px">${esc(d.name)}</h3><span class="tag" style="margin:2px 0">${esc(d.specialty)}</span>
+  <p class="small" style="margin-top:6px">${esc(d.clinicName)} • Total ₹${(d.consultationFee+d.platformFee)}</p></div></div>`).join("") || `<p>No doctors match your search.</p>`}
   </div>${nav('doctors')}`;
 }
 
@@ -371,9 +390,9 @@ function doctorView(){
   const d = S.doctor;
   return `${header("Doctor")}<div class="screen">
   <div class="card doctor">
-  <div class="avatar">👨‍⚕️</div>
-  <div><h3>${esc(d.name)}</h3><p>${esc(d.specialty)}</p>
-  ${(d.qualifications||[]).map(q=>`<div class="small">${esc(q)}</div>`).join("")}
+  <div class="avatarG">${initials(d.name)}</div>
+  <div><h3>${esc(d.name)}</h3><span class="tag">${esc(d.specialty)}</span>
+  ${(d.qualifications||[]).map(q=>`<div class="small" style="margin-top:4px">${esc(q)}</div>`).join("")}
   <p class="small">${esc(d.experience)}</p></div></div>
   <div class="card">
   <div class="kpi"><span>Clinic</span><b>${esc(d.clinicName)}</b></div>
@@ -494,7 +513,7 @@ function profileView(){
   return `${header("Profile")}<div class="screen">
   <div class="card"><b>${p?esc(p.fullName):"No patient selected"}</b></div>
   <button class="outline big" onclick="setScreen('selectPatient')">Switch / Add Family Patient</button>
-  </div>${nav('profile')}`;
+  </div>${nav('')}`;
 }
 
 // TV Mode — standalone display for a clinic monitor. Opened via ?tv=<doctorId>, no login/patient flow needed.

@@ -31,11 +31,30 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px 6px;b
 
 <div id="loginScreen" class="loginWrap">
   <div class="logo center" style="text-align:center">Clinic<span>Q</span></div>
-  <p style="text-align:center;color:var(--muted)">Operator Login</p>
-  <label>Email</label><input id="loginEmail" type="email" placeholder="operator@clinicq.com">
+  <p id="loginTitle" style="text-align:center;color:var(--muted)">Doctor / Operator Login</p>
+  <label>Email</label><input id="loginEmail" type="email" placeholder="you@example.com">
   <label>Password</label><input id="loginPass" type="password">
-  <button class="primary" style="width:100%;margin-top:16px" onclick="doLogin()">Login</button>
+  <button id="loginBtn" class="primary" style="width:100%;margin-top:16px" onclick="doLogin()">Login</button>
   <div id="loginErr" class="loginErr"></div>
+  <p style="text-align:center;margin-top:14px;font-size:13px">
+    <span id="modeLoginText">New here? </span><a href="#" id="modeToggle" onclick="toggleAuthMode();return false;">Create Account</a>
+  </p>
+</div>
+
+<div id="profileSetupScreen" class="loginWrap hidden" style="max-width:480px">
+  <div class="logo center" style="text-align:center">Clinic<span>Q</span></div>
+  <p style="text-align:center;color:var(--muted)">Set up your Doctor Profile</p>
+  <label>Doctor Name</label><input id="pfName" placeholder="Dr. Full Name">
+  <label>Specialty</label><input id="pfSpecialty" placeholder="e.g. Neurologist">
+  <label>Qualifications (comma separated)</label><input id="pfQual" placeholder="MBBS, MD">
+  <label>Experience</label><input id="pfExp" placeholder="e.g. 10 Years Experience">
+  <label>Clinic Name</label><input id="pfClinic" placeholder="Clinic name">
+  <label>Clinic Address</label><input id="pfAddress" placeholder="Clinic address">
+  <label>Working Hours</label><input id="pfHours" placeholder="e.g. 10:00 AM – 2:00 PM">
+  <label>Consultation Fee (₹)</label><input id="pfFee" type="number" placeholder="500">
+  <p class="small">Platform fee and ClinicQ service fee are added automatically — you don't need to set these.</p>
+  <button class="primary" style="width:100%;margin-top:10px" onclick="createDoctorProfile()">Create Profile & Start</button>
+  <div id="profileErr" class="loginErr"></div>
 </div>
 
 <div id="mainScreen" class="hidden">
@@ -75,6 +94,16 @@ try{
   }
 }catch(e){ console.error(e); document.getElementById("connbar").classList.remove("hidden"); }
 
+let authMode = "login"; // "login" | "signup"
+function toggleAuthMode(){
+  authMode = authMode==="login" ? "signup" : "login";
+  document.getElementById("loginTitle").textContent = authMode==="login" ? "Doctor / Operator Login" : "Create Your Account";
+  document.getElementById("loginBtn").textContent = authMode==="login" ? "Login" : "Create Account";
+  document.getElementById("modeLoginText").textContent = authMode==="login" ? "New here? " : "Already have an account? ";
+  document.getElementById("modeToggle").textContent = authMode==="login" ? "Create Account" : "Login";
+  document.getElementById("loginErr").textContent = "";
+}
+
 async function doLogin(){
   const email = document.getElementById("loginEmail").value.trim();
   const pass = document.getElementById("loginPass").value;
@@ -82,27 +111,81 @@ async function doLogin(){
   errBox.textContent = "";
   if(!fb.ready){ errBox.textContent = "Firebase not connected."; return; }
   try{
-    await fb.auth.signInWithEmailAndPassword(email, pass);
+    if(authMode==="login"){
+      await fb.auth.signInWithEmailAndPassword(email, pass);
+    } else {
+      await fb.auth.createUserWithEmailAndPassword(email, pass);
+    }
   }catch(e){
-    errBox.textContent = "Login failed: " + e.message;
+    errBox.textContent = (authMode==="login" ? "Login failed: " : "Sign up failed: ") + e.message;
   }
 }
 function doLogout(){ fb.auth.signOut(); }
 
+// Each operator IS the doctor's account — doctorId is simply their Firebase Auth UID.
+// This removes any need for an admin to manually link operators to doctors.
+let myDoctorId = null;
+
+async function createDoctorProfile(){
+  const errBox = document.getElementById("profileErr");
+  errBox.textContent = "";
+  const name = document.getElementById("pfName").value.trim();
+  const fee = Number(document.getElementById("pfFee").value);
+  if(!name || !fee){ errBox.textContent = "Doctor name and consultation fee are required."; return; }
+
+  // Sitewide default platform/service fee — developer can override per-doctor later directly in Firestore,
+  // or change the default for future signups by editing config/fees.
+  let defaults = { platformFee:100, serviceFee:20, avgConsultationMinutes:5 };
+  try{
+    const cfg = await fb.db.collection("config").doc("fees").get();
+    if(cfg.exists) defaults = { ...defaults, ...cfg.data() };
+  }catch(e){}
+
+  const doctorData = {
+    name, specialty: document.getElementById("pfSpecialty").value.trim(),
+    qualifications: document.getElementById("pfQual").value.split(",").map(s=>s.trim()).filter(Boolean),
+    experience: document.getElementById("pfExp").value.trim(),
+    clinicName: document.getElementById("pfClinic").value.trim(),
+    clinicAddress: document.getElementById("pfAddress").value.trim(),
+    workingHours: document.getElementById("pfHours").value.trim(),
+    consultationFee: fee,
+    platformFee: defaults.platformFee,
+    serviceFee: defaults.serviceFee,
+    avgConsultationMinutes: defaults.avgConsultationMinutes,
+    upiId: "", emergencyNumber: "To be configured by Admin",
+    isActive: true
+  };
+
+  await fb.db.collection("doctors").doc(myDoctorId).set(doctorData);
+  await fb.db.collection("queue").doc(myDoctorId).set({
+    currentToken:0, status:"OPEN", lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  document.getElementById("profileSetupScreen").classList.add("hidden");
+  document.getElementById("mainScreen").classList.remove("hidden");
+  listenAll();
+}
+
 if(fb.ready){
-  fb.auth.onAuthStateChanged(user=>{
+  fb.auth.onAuthStateChanged(async user=>{
     if(user){
       document.getElementById("loginScreen").classList.add("hidden");
-      document.getElementById("mainScreen").classList.remove("hidden");
-      listenAll();
+      myDoctorId = user.uid;
+      const doc = await fb.db.collection("doctors").doc(myDoctorId).get();
+      if(!doc.exists){
+        document.getElementById("profileSetupScreen").classList.remove("hidden");
+      } else {
+        document.getElementById("mainScreen").classList.remove("hidden");
+        listenAll();
+      }
     } else {
       document.getElementById("loginScreen").classList.remove("hidden");
+      document.getElementById("profileSetupScreen").classList.add("hidden");
       document.getElementById("mainScreen").classList.add("hidden");
     }
   });
 }
 
-const DOCTOR_ID = "d1";
 let queueLive = {currentToken:0,status:"OPEN"};
 let pending = [];   // appointments waiting_for_token
 let active = [];    // appointments with a token, not yet completed
@@ -113,14 +196,14 @@ function listenAll(){
   if(!fb.ready) return;
 
   // live queue doc
-  fb.db.collection("queue").doc(DOCTOR_ID).onSnapshot(doc=>{
+  fb.db.collection("queue").doc(myDoctorId).onSnapshot(doc=>{
     queueLive = doc.exists ? doc.data() : {currentToken:0,status:"OPEN"};
     render();
   });
 
   // ClinicQ online bookings waiting for a token — this is the operator's action queue
   fb.db.collection("appointments")
-    .where("doctorId","==",DOCTOR_ID)
+    .where("doctorId","==",myDoctorId)
     .where("status","==","waiting_for_token")
     .onSnapshot(snap=>{
       pending = snap.docs.map(d=>({id:d.id, ...d.data()}));
@@ -129,7 +212,7 @@ function listenAll(){
 
   // Everyone currently in the live queue (token assigned, not completed/cancelled)
   fb.db.collection("appointments")
-    .where("doctorId","==",DOCTOR_ID)
+    .where("doctorId","==",myDoctorId)
     .where("status","in",["waiting","current"])
     .onSnapshot(snap=>{
       active = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>a.tokenNumber-b.tokenNumber);
@@ -161,7 +244,7 @@ async function assignToken(appointmentId, patientName){
 async function callNext(){
   if(!fb.ready){ alert("Connect Firebase first."); return; }
   const next = queueLive.currentToken + 1;
-  await fb.db.collection("queue").doc(DOCTOR_ID).set({
+  await fb.db.collection("queue").doc(myDoctorId).set({
     currentToken: next, status:"OPEN", lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
   }, {merge:true});
   // mark matching appointment(s) as current/completed

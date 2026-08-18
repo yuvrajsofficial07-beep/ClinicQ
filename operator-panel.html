@@ -257,11 +257,41 @@ async function callNext(){
   });
 }
 
+// Add a walk-in (offline) patient directly with a token — operator sets the number themselves
+async function addWalkIn(){
+  const name = document.getElementById("wiName").value.trim();
+  const age = Number(document.getElementById("wiAge").value)||0;
+  const mobile = document.getElementById("wiMobile").value.trim();
+  const complaint = document.getElementById("wiComplaint").value.trim();
+  const suggested = nextTokenNumber();
+  const input = prompt(`Enter token number for ${name||"this patient"}\n(Suggested next: ${suggested})`, suggested);
+  if(input===null) return;
+  const token = parseInt(input,10);
+  if(!name || !token || token<1){ alert("Enter patient name and a valid token number."); return; }
+  await fb.db.collection("appointments").add({
+    userId:null, patientId:null, patientName:name, patientAge:age, patientMobile:mobile,
+    complaint, doctorId:myDoctorId, paymentType:"cash_at_clinic", amountPaid:0, paymentStatus:"verified",
+    tokenNumber:token, status:"waiting", source:"walk_in",
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  document.getElementById("wiName").value=""; document.getElementById("wiAge").value="";
+  document.getElementById("wiMobile").value=""; document.getElementById("wiComplaint").value="";
+}
+
 function render(){
   document.getElementById("app").innerHTML = `
   <div class="card">
     <div class="kpi"><span>Current Token</span><span class="bignum">#${queueLive.currentToken}</span></div>
     <div class="kpi"><span>Queue Status</span><span class="tag">${esc(queueLive.status)}</span></div>
+  </div>
+
+  <div class="card">
+    <h3>Add Walk-in Patient</h3>
+    <input id="wiName" placeholder="Patient name" style="margin-bottom:8px">
+    <input id="wiAge" type="number" placeholder="Age" style="margin-bottom:8px">
+    <input id="wiMobile" placeholder="Mobile number (so they can track token)" style="margin-bottom:8px">
+    <input id="wiComplaint" placeholder="Complaint" style="margin-bottom:10px">
+    <button class="primary" onclick="addWalkIn()">Add & Assign Token</button>
   </div>
 
   <div class="card">

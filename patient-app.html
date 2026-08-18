@@ -150,7 +150,7 @@ async function addPatientToFirestore(p){
 async function createAppointment({patient, paymentType, amountPaid}){
   const data = {
     userId:S.demoUserId, patientId:patient.id, patientName:patient.fullName, patientAge:patient.age,
-    complaint:patient.complaint||"", doctorId:selectedDoctorId,
+    complaint:patient.complaint||"", doctorId:selectedDoctorId, patientMobile:patient.mobile||"",
     paymentType, amountPaid, paymentStatus:"verified", paymentRef:"DEMO-"+Date.now(),
     tokenNumber:null, status:"waiting_for_token", source:"online",
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -357,8 +357,30 @@ function waitingView(){
   </div>${nav('token')}`;
 }
 
+async function trackByMobile(){
+  const mobile = document.getElementById("trackMobile").value.trim();
+  const err = document.getElementById("trackErr");
+  err.textContent = "";
+  if(!mobile){ err.textContent="Enter mobile number"; return; }
+  const snap = await fb.db.collection("appointments").where("patientMobile","==",mobile).get();
+  let results = snap.docs.map(d=>({id:d.id, ...d.data()})).filter(a=>!["completed","cancelled","no_show"].includes(a.status));
+  if(!results.length){ err.textContent="No active appointment found for this number."; return; }
+  results.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+  const ap = results[0];
+  selectedDoctorId = ap.doctorId;
+  await loadDoctor();
+  listenQueue();
+  listenAppointment(ap.id);
+}
+
 function tokenView(){
-  if(!S.appointment) return `${header("My Token")}<div class="screen"><p>No active appointment yet.</p></div>${nav('token')}`;
+  if(!S.appointment) return `${header("My Token")}<div class="screen">
+  <p>No active appointment yet.</p>
+  <div class="card"><h3>Walk-in patient? Track your token</h3>
+  <label>Mobile Number</label><input id="trackMobile" placeholder="Enter mobile number used at clinic">
+  <button class="primary big" onclick="trackByMobile()">Find My Token</button>
+  <div id="trackErr" class="small" style="color:#b42318;margin-top:8px"></div>
+  </div></div>${nav('token')}`;
   const ap = S.appointment, q = S.queueLive;
   const assigned = !!ap.tokenNumber;
   return `${header("My Token")}<div class="screen">

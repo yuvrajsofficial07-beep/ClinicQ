@@ -5,24 +5,43 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ClinicQ — Operator Panel</title>
 <style>
-:root{--blue:#1769ff;--dark:#17324d;--muted:#64788a;--bg:#f4f8fc;--line:#e2eaf2;--green:#18864b;--orange:#9a6500;--red:#b42318}
-*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--dark)}
-button,input,select{font:inherit}button{border:0;border-radius:12px;padding:12px 16px;font-weight:750;cursor:pointer}
-.primary{background:var(--blue);color:#fff}.secondary{background:#e9f1ff;color:#1258c4}.outline{background:#fff;border:1px solid var(--line);color:var(--dark)}.danger{background:#ffe9e7;color:var(--red)}
-.wrap{max-width:900px;margin:auto;padding:20px}
-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-.logo{font-size:24px;font-weight:900}.logo span{color:var(--blue)}
-.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 5px 18px #17324d0a}
-.kpi{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eef2f5}.kpi:last-child{border-bottom:0}.kpi b{font-size:18px}
-table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
-.tag{display:inline-block;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:750;background:#eaf7ef;color:var(--green)}.warning{background:#fff4d5;color:var(--orange)}
-.bignum{font-size:48px;font-weight:950;color:var(--blue)}
+:root{--blue:#1769ff;--blue2:#3b82f6;--dark:#17324d;--muted:#64788a;--bg:#eef4fb;--line:#e2eaf2;--green:#18864b;--orange:#9a6500;--red:#b42318}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:linear-gradient(180deg,#eef4fb 0%,#f7fafd 320px);color:var(--dark)}
+button,input,select{font:inherit}
+button{border:0;border-radius:12px;padding:12px 18px;font-weight:750;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}
+button:hover{transform:translateY(-1px)}button:active{transform:translateY(0)}
+.primary{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 6px 16px #1769ff33}
+.secondary{background:#e9f1ff;color:#1258c4}.outline{background:#fff;border:1px solid var(--line);color:var(--dark)}
+.danger{background:#ffe9e7;color:var(--red)}
+.wrap{max-width:960px;margin:auto;padding:22px 20px 60px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.logo{font-size:25px;font-weight:900;letter-spacing:-.3px}.logo span{color:var(--blue)}
+.headerBtns{display:flex;gap:8px}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;margin:14px 0;box-shadow:0 8px 24px #17324d0d}
+.card h3{margin:0 0 14px;font-size:16px;display:flex;align-items:center;gap:8px}
+.kpi{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #eef2f5}.kpi:last-child{border-bottom:0}.kpi b{font-size:18px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:10px 8px;text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid var(--line)}
+td{padding:11px 8px;border-bottom:1px solid #eef2f5;text-align:left;vertical-align:middle}
+tbody tr:hover{background:#f7fafd}
+.tag{display:inline-block;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:750;background:#eaf7ef;color:var(--green)}
+.warning{background:#fff4d5;color:var(--orange)}
+.bignum{font-size:52px;font-weight:950;background:linear-gradient(135deg,var(--blue),var(--blue2));-webkit-background-clip:text;background-clip:text;color:transparent}
 .connbar{background:#b42318;color:#fff;text-align:center;font-size:12px;padding:8px;border-radius:10px;margin-bottom:14px}
 .hidden{display:none!important}
-.loginWrap{max-width:380px;margin:80px auto;background:#fff;border:1px solid var(--line);border-radius:16px;padding:26px;box-shadow:0 5px 18px #17324d0a}
+.loginWrap{max-width:380px;margin:80px auto;background:#fff;border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:0 10px 30px #17324d14}
 .loginWrap label{display:block;font-size:13px;font-weight:750;margin:13px 0 6px}
 .loginWrap input{width:100%;border:1px solid #ccd9e5;border-radius:12px;padding:12px;outline:none}
 .loginErr{color:var(--red);font-size:13px;margin-top:10px}
+input,select{border:1px solid #ccd9e5;border-radius:12px;padding:12px;outline:none;transition:border-color .15s}
+input:focus,select:focus{border-color:var(--blue)}
+
+/* Live status indicator — pulsing green dot with expanding ripple */
+.liveBadge{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:800;color:#127a3f;background:#e8f9ef;padding:6px 12px;border-radius:999px;letter-spacing:.3px}
+.liveDot{position:relative;width:9px;height:9px;background:#1db954;border-radius:50%;flex:none}
+.liveDot::before{content:'';position:absolute;top:0;left:0;width:9px;height:9px;background:#1db954;border-radius:50%;animation:livePing 1.6s cubic-bezier(0,0,.2,1) infinite}
+@keyframes livePing{0%{transform:scale(1);opacity:.7}75%,100%{transform:scale(3.2);opacity:0}}
 </style>
 </head>
 <body>
@@ -58,8 +77,8 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px 6px;b
 </div>
 
 <div id="mainScreen" class="hidden">
-<header><div class="logo">Clinic<span>Q</span> — Operator Panel</div>
-  <div><button class="outline" onclick="callNext()">Call Next Token ▶</button>
+<header><div class="logo">Clinic<span>Q</span> <span style="color:var(--muted);font-weight:600;font-size:15px">— Operator Panel</span></div>
+  <div class="headerBtns"><button class="primary" onclick="callNext()">Call Next Token ▶</button>
   <button class="outline" onclick="doLogout()">Logout</button></div>
 </header>
 <div id="app"></div>
@@ -309,7 +328,12 @@ function render(){
   document.getElementById("app").innerHTML = `
   <div class="card">
     <div class="kpi"><span>Current Token</span><span class="bignum">#${queueLive.currentToken}</span></div>
-    <div class="kpi"><span>Queue Status</span><span class="tag">${esc(queueLive.status)}</span></div>
+    <div class="kpi"><span>Queue Status</span>
+      <span style="display:flex;align-items:center;gap:10px">
+        <span class="liveBadge"><span class="liveDot"></span>LIVE</span>
+        <span class="tag">${esc(queueLive.status)}</span>
+      </span>
+    </div>
   </div>
 
   <div class="card">
